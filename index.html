@@ -14,25 +14,18 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; }
     header { padding: 20px 24px; border-bottom: 1px solid #232a38; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-    .logo { font-size: 22px; font-weight: 700; background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo { font-size: 22px; font-weight: 700; background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
     .badge-admin { background: transparent; border: 1px solid #2f3748; color: var(--muted); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: 0.2s; }
     .badge-admin:hover { border-color: var(--accent); color: var(--text); }
     .badge-admin.active { background: var(--accent); border-color: var(--accent); color: #fff; }
     main { flex: 1; width: 100%; max-width: 960px; margin: 0 auto; padding: 32px 20px 60px; }
     h2 { font-size: 18px; margin-bottom: 16px; font-weight: 600; }
-    .card { background: var(--card); border: 1px solid #232a38; border-radius: var(--radius); padding: 24px; margin-bottom: 32px; }
-    .upload-form { display: grid; gap: 12px; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
-    input[type="text"], input[type="password"], input[type="email"], textarea, select, input[type="file"] { width: 100%; background: #0f131b; border: 1px solid #2a3142; border-radius: 10px; padding: 12px; color: var(--text); font-size: 14px; font-family: inherit; outline: none; transition: 0.2s; }
-    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
-    textarea { resize: vertical; min-height: 70px; }
-    input[type="file"]::file-selector-button { background: var(--accent); border: none; color: #fff; padding: 8px 14px; border-radius: 8px; cursor: pointer; margin-right: 12px; font-size: 13px; }
-    .btn { background: linear-gradient(90deg, var(--accent), #8a7bff); border: none; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    
+    .btn { background: linear-gradient(90deg, var(--accent), #8a7bff); border: none; color: #fff; padding: 14px 20px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; text-decoration: none; display: block; text-align: center; }
     .btn:hover { opacity: 0.9; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-ghost { background: transparent; border: 1px solid #2a3142; color: var(--muted); padding: 6px 12px; font-size: 12px; }
     .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+    
     .tracks { display: flex; flex-direction: column; gap: 12px; }
     .track { background: var(--card); border: 1px solid #232a38; border-radius: var(--radius); padding: 16px 18px; transition: 0.2s; }
     .track:hover { background: var(--card-hover); }
@@ -51,6 +44,7 @@
     .modal-overlay.show { display: flex; }
     .modal { background: var(--card); border: 1px solid #2a3142; border-radius: var(--radius); padding: 24px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
     .modal h3 { margin-bottom: 8px; text-align: center; color: var(--text); }
+    .modal input { width: 100%; background: #0f131b; border: 1px solid #2a3142; border-radius: 10px; padding: 12px; color: var(--text); font-size: 14px; outline: none; }
     .modal .error { color: var(--danger); font-size: 12px; text-align: center; display: none; }
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1c2130; border: 1px solid var(--accent); color: var(--text); padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 1001; }
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
@@ -58,30 +52,13 @@
 </head>
 <body>
   <header>
-    <div class="logo">🎵 SN music</div>
+    <a href="index.html" class="logo">🎵 SN music</a>
     <button class="badge-admin" id="adminToggle">Войти в админку</button>
   </header>
 
   <main>
-    <section class="card">
-      <h2>Загрузить трек или демо</h2>
-      <form class="upload-form" id="uploadForm">
-        <div class="row">
-          <input type="text" id="artist" placeholder="Имя артиста" required>
-          <input type="text" id="title" placeholder="Название трека" required>
-        </div>
-        <div class="row">
-          <input type="text" id="genre" placeholder="Жанр (например, hip-hop)">
-          <select id="type">
-            <option value="release">Готовый релиз</option>
-            <option value="demo">Демо / черновик</option>
-          </select>
-        </div>
-        <textarea id="description" placeholder="Пара слов о треке (необязательно)"></textarea>
-        <input type="file" id="file" accept="audio/*" required>
-        <button type="submit" class="btn" id="submitBtn">Отправить на модерацию</button>
-      </form>
-    </section>
+    <!-- Кнопка перехода на страницу загрузки -->
+    <a href="upload.html" class="btn" style="margin-bottom: 32px;">➕ Загрузить свой трек</a>
 
     <section>
       <h2>Треки на площадке</h2>
@@ -93,11 +70,12 @@
 
   <footer>сделано командой PlayTools для бесплатных пользователей</footer>
 
+  <!-- Модальное окно входа -->
   <div class="modal-overlay" id="loginModal">
     <div class="modal">
       <h3>Вход в админку</h3>
       <form id="loginForm">
-        <input type="email" id="loginEmail" placeholder="Email" required>
+        <input type="email" id="loginEmail" placeholder="Email" required style="margin-bottom: 10px;">
         <input type="password" id="loginPassword" placeholder="Пароль" required>
         <div class="error" id="loginError">Неверный email или пароль</div>
         <button type="submit" class="btn" style="width:100%; margin-top:10px;">Войти</button>
@@ -113,13 +91,11 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnbGpucWN4amJwdW5sZndva3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODUzMzgsImV4cCI6MjEwODI2MTMzOH0.LPeIh77qTlhg8NmP5a6hZOVEDSgQeB57V6l8SMhXoeo';
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
     let isAdmin = false;
     const $ = (id) => document.getElementById(id);
-    const tracksList = $('tracksList');
-    const toastEl = $('toast');
 
     function showToast(msg) {
+      const toastEl = $('toast');
       toastEl.textContent = msg;
       toastEl.classList.add('show');
       clearTimeout(toastEl._t);
@@ -128,10 +104,10 @@
 
     $('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = $('loginEmail').value.trim();
-      const pass = $('loginPassword').value;
-      
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+      const { error } = await supabaseClient.auth.signInWithPassword({ 
+        email: $('loginEmail').value.trim(), 
+        password: $('loginPassword').value 
+      });
       
       if (error) {
         $('loginError').style.display = 'block';
@@ -164,68 +140,18 @@
       loadTracks();
     }
 
-    $('uploadForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const file = $('file').files[0];
-      if (!file) return;
-
-      const btn = $('submitBtn');
-      btn.disabled = true;
-      btn.textContent = 'Загрузка в облако...';
-
-      try {
-        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-        const { data: uploadData, error: uploadError } = await supabaseClient.storage
-          .from('audio')
-          .upload(fileName, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: urlData } = supabaseClient.storage.from('audio').getPublicUrl(fileName);
-
-        const { error: dbError } = await supabaseClient.from('tracks').insert([{
-          artist: $('artist').value.trim(),
-          title: $('title').value.trim(),
-          genre: $('genre').value.trim() || 'без жанра',
-          description: $('description').value.trim(),
-          type: $('type').value,
-          audio_url: urlData.publicUrl
-        }]);
-
-        if (dbError) throw dbError;
-
-        $('uploadForm').reset();
-        showToast('Трек успешно загружен! ✅');
-        loadTracks();
-      } catch (error) {
-        console.error(error);
-        showToast('Ошибка: ' + error.message);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Отправить на модерацию';
-      }
-    });
-
     async function loadTracks() {
       let query = supabaseClient.from('tracks').select('*').order('created_at', { ascending: false });
-      
-      if (!isAdmin) {
-        query = query.eq('status', 'approved');
-      }
+      if (!isAdmin) query = query.eq('status', 'approved');
 
       const { data: tracks, error } = await query;
 
-      if (error) {
-        tracksList.innerHTML = '<div class="empty">Ошибка загрузки треков.</div>';
+      if (error || !tracks || tracks.length === 0) {
+        $('tracksList').innerHTML = '<div class="empty">Пока нет треков.</div>';
         return;
       }
 
-      if (!tracks || tracks.length === 0) {
-        tracksList.innerHTML = '<div class="empty">Пока нет треков. Загрузите первый!</div>';
-        return;
-      }
-
-      tracksList.innerHTML = tracks.map(t => `
+      $('tracksList').innerHTML = tracks.map(t => `
         <div class="track ${t.vip ? 'vip' : ''}">
           <div class="track-head">
             <div>
@@ -254,38 +180,16 @@
       `).join('');
     }
 
-    window.moderate = async function(id, status) {
-      await supabaseClient.from('tracks').update({ status }).eq('id', id);
-      loadTracks();
-    };
-    
-    window.toggleVip = async function(id, currentVip) {
-      await supabaseClient.from('tracks').update({ vip: !currentVip }).eq('id', id);
-      loadTracks();
-    };
-    
-    window.removeTrack = async function(id) {
-      if (!confirm('Удалить трек?')) return;
-      await supabaseClient.from('tracks').delete().eq('id', id);
-      loadTracks();
-    };
+    window.moderate = async function(id, status) { await supabaseClient.from('tracks').update({ status }).eq('id', id); loadTracks(); };
+    window.toggleVip = async function(id, currentVip) { await supabaseClient.from('tracks').update({ vip: !currentVip }).eq('id', id); loadTracks(); };
+    window.removeTrack = async function(id) { if (!confirm('Удалить трек?')) return; await supabaseClient.from('tracks').delete().eq('id', id); loadTracks(); };
 
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, c => ({
-        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-      }[c]));
-    }
+    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
     async function checkSession() {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session) {
-        isAdmin = true;
-        updateAdminUI();
-      } else {
-        loadTracks();
-      }
+      if (session) { isAdmin = true; updateAdminUI(); } else { loadTracks(); }
     }
-    
     checkSession();
   </script>
 </body>
