@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Загрузка трека — SN music</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #0d0f14; --card: #161a22; --text: #e6e9ef;
+      --muted: #8b93a7; --accent: #6c5ce7; --accent-2: #00d4aa;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; }
+    header { padding: 20px 24px; border-bottom: 1px solid #232a38; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .logo { font-size: 22px; font-weight: 700; background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
+    .back-btn { background: transparent; border: 1px solid #2f3748; color: var(--muted); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; text-decoration: none; transition: 0.2s; }
+    .back-btn:hover { border-color: var(--accent); color: var(--text); }
+    main { flex: 1; width: 100%; max-width: 600px; margin: 0 auto; padding: 32px 20px 60px; }
+    h2 { font-size: 20px; margin-bottom: 16px; font-weight: 600; text-align: center; }
+    .card { background: var(--card); border: 1px solid #232a38; border-radius: var(--radius); padding: 24px; }
+    .upload-form { display: grid; gap: 12px; }
+    input[type="text"], textarea, select, input[type="file"] { width: 100%; background: #0f131b; border: 1px solid #2a3142; border-radius: 10px; padding: 12px; color: var(--text); font-size: 14px; outline: none; }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 70px; }
+    input[type="file"]::file-selector-button { background: var(--accent); border: none; color: #fff; padding: 8px 14px; border-radius: 8px; cursor: pointer; margin-right: 12px; font-size: 13px; }
+    .btn { background: linear-gradient(90deg, var(--accent), #8a7bff); border: none; color: #fff; padding: 14px 20px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    footer { border-top: 1px solid #232a38; padding: 24px 20px; text-align: center; color: var(--muted); font-size: 13px; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1c2130; border: 1px solid var(--accent); color: var(--text); padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 1001; }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html" class="logo">🎵 SN music</a>
+    <a href="index.html" class="back-btn">← На главную</a>
+  </header>
+
+  <main>
+    <h2>Загрузить трек или демо</h2>
+    <div class="card">
+      <form class="upload-form" id="uploadForm">
+        <input type="text" id="artist" placeholder="Имя артиста" required>
+        <input type="text" id="title" placeholder="Название трека" required>
+        <input type="text" id="genre" placeholder="Жанр (например, hip-hop)">
+        <select id="type">
+          <option value="release">Готовый релиз</option>
+          <option value="demo">Демо / черновик</option>
+        </select>
+        <textarea id="description" placeholder="Пара слов о треке (необязательно)"></textarea>
+        <input type="file" id="file" accept="audio/*" required>
+        <button type="submit" class="btn" id="submitBtn">Отправить на модерацию</button>
+      </form>
+    </div>
+  </main>
+
+  <footer>сделано командой PlayTools для бесплатных пользователей</footer>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const SUPABASE_URL = 'https://fgljnqcxjbpunlfwoktb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnbGpucWN4amJwdW5sZndva3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODUzMzgsImV4cCI6MjEwODI2MTMzOH0.LPeIh77qTlhg8NmP5a6hZOVEDSgQeB57V6l8SMhXoeo';
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const $ = (id) => document.getElementById(id);
+
+    function showToast(msg) {
+      const toastEl = $('toast');
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastEl._t);
+      toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 3000);
+    }
+
+    $('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = $('file').files[0];
+      if (!file) return;
+
+      const btn = $('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Загрузка в облако...';
+
+      try {
+        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const { error: uploadError } = await supabaseClient.storage.from('audio').upload(fileName, file);
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabaseClient.storage.from('audio').getPublicUrl(fileName);
+
+        const { error: dbError } = await supabaseClient.from('tracks').insert([{
+          artist: $('artist').value.trim(),
+          title: $('title').value.trim(),
+          genre: $('genre').value.trim() || 'без жанра',
+          description: $('description').value.trim(),
+          type: $('type').value,
+          audio_url: urlData.publicUrl
+        }]);
+
+        if (dbError) throw dbError;
+
+        $('uploadForm').reset();
+        showToast('Трек успешно загружен! ✅');
+        setTimeout(() => { window.location.href = 'index.html'; }, 2000); // Возврат на главную через 2 сек
+        
+      } catch (error) {
+        showToast('Ошибка: ' + error.message);
+        btn.disabled = false;
+        btn.textContent = 'Отправить на модерацию';
+      }
+    });
+  </script>
+</body>
+</html>
