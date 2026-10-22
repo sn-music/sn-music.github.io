@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎵 SN music — площадка для музыкантов</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #0d0f14; --card: #161a22; --card-hover: #1c2130; --text: #e6e9ef;
+      --muted: #8b93a7; --accent: #6c5ce7; --accent-2: #00d4aa;
+      --vip: #f5b301; --danger: #ff5c5c; --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; }
+    header { padding: 20px 24px; border-bottom: 1px solid #232a38; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .logo { font-size: 22px; font-weight: 700; background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .badge-admin { background: transparent; border: 1px solid #2f3748; color: var(--muted); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: 0.2s; }
+    .badge-admin:hover { border-color: var(--accent); color: var(--text); }
+    .badge-admin.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    main { flex: 1; width: 100%; max-width: 960px; margin: 0 auto; padding: 32px 20px 60px; }
+    h2 { font-size: 18px; margin-bottom: 16px; font-weight: 600; }
+    .card { background: var(--card); border: 1px solid #232a38; border-radius: var(--radius); padding: 24px; margin-bottom: 32px; }
+    .upload-form { display: grid; gap: 12px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+    input[type="text"], input[type="password"], input[type="email"], textarea, select, input[type="file"] { width: 100%; background: #0f131b; border: 1px solid #2a3142; border-radius: 10px; padding: 12px; color: var(--text); font-size: 14px; font-family: inherit; outline: none; transition: 0.2s; }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 70px; }
+    input[type="file"]::file-selector-button { background: var(--accent); border: none; color: #fff; padding: 8px 14px; border-radius: 8px; cursor: pointer; margin-right: 12px; font-size: 13px; }
+    .btn { background: linear-gradient(90deg, var(--accent), #8a7bff); border: none; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-ghost { background: transparent; border: 1px solid #2a3142; color: var(--muted); padding: 6px 12px; font-size: 12px; }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+    .tracks { display: flex; flex-direction: column; gap: 12px; }
+    .track { background: var(--card); border: 1px solid #232a38; border-radius: var(--radius); padding: 16px 18px; transition: 0.2s; }
+    .track:hover { background: var(--card-hover); }
+    .track.vip { border-color: var(--vip); box-shadow: 0 0 0 1px rgba(245, 179, 1, 0.25); }
+    .track-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+    .track-title { font-weight: 600; font-size: 15px; }
+    .track-artist { color: var(--muted); font-size: 13px; }
+    .tag { display: inline-block; font-size: 11px; padding: 3px 8px; border-radius: 6px; background: #232a38; color: var(--muted); margin-right: 6px; }
+    .tag.vip { background: rgba(245, 179, 1, 0.15); color: var(--vip); }
+    .tag.pending { background: rgba(245, 179, 1, 0.12); color: #e6b800; }
+    audio { width: 100%; margin-top: 10px; height: 36px; }
+    .track-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 14px; }
+    footer { border-top: 1px solid #232a38; padding: 24px 20px; text-align: center; color: var(--muted); font-size: 13px; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: var(--card); border: 1px solid #2a3142; border-radius: var(--radius); padding: 24px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
+    .modal h3 { margin-bottom: 8px; text-align: center; color: var(--text); }
+    .modal .error { color: var(--danger); font-size: 12px; text-align: center; display: none; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1c2130; border: 1px solid var(--accent); color: var(--text); padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 1001; }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">🎵 SN music</div>
+    <button class="badge-admin" id="adminToggle">Войти в админку</button>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Загрузить трек или демо</h2>
+      <form class="upload-form" id="uploadForm">
+        <div class="row">
+          <input type="text" id="artist" placeholder="Имя артиста" required>
+          <input type="text" id="title" placeholder="Название трека" required>
+        </div>
+        <div class="row">
+          <input type="text" id="genre" placeholder="Жанр (например, hip-hop)">
+          <select id="type">
+            <option value="release">Готовый релиз</option>
+            <option value="demo">Демо / черновик</option>
+          </select>
+        </div>
+        <textarea id="description" placeholder="Пара слов о треке (необязательно)"></textarea>
+        <input type="file" id="file" accept="audio/*" required>
+        <button type="submit" class="btn" id="submitBtn">Отправить на модерацию</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Треки на площадке</h2>
+      <div class="tracks" id="tracksList">
+        <div class="empty">Загрузка треков...</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>сделано командой PlayTools для бесплатных пользователей</footer>
+
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal">
+      <h3>Вход в админку</h3>
+      <form id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Email" required>
+        <input type="password" id="loginPassword" placeholder="Пароль" required>
+        <div class="error" id="loginError">Неверный email или пароль</div>
+        <button type="submit" class="btn" style="width:100%; margin-top:10px;">Войти</button>
+      </form>
+      <button class="btn btn-ghost" id="closeModal" style="width:100%; margin-top:5px;">Отмена</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const SUPABASE_URL = 'https://fgljnqcxjbpunlfwoktb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnbGpucWN4amJwdW5sZndva3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODUzMzgsImV4cCI6MjEwODI2MTMzOH0.LPeIh77qTlhg8NmP5a6hZOVEDSgQeB57V6l8SMhXoeo';
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    let isAdmin = false;
+    const $ = (id) => document.getElementById(id);
+    const tracksList = $('tracksList');
+    const toastEl = $('toast');
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastEl._t);
+      toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 3000);
+    }
+
+    $('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = $('loginEmail').value.trim();
+      const pass = $('loginPassword').value;
+      
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+      
+      if (error) {
+        $('loginError').style.display = 'block';
+      } else {
+        isAdmin = true;
+        $('loginModal').classList.remove('show');
+        $('loginForm').reset();
+        $('loginError').style.display = 'none';
+        updateAdminUI();
+        showToast('Добро пожаловать в админку!');
+      }
+    });
+
+    $('closeModal').addEventListener('click', () => $('loginModal').classList.remove('show'));
+    
+    $('adminToggle').addEventListener('click', async () => {
+      if (isAdmin) {
+        await supabaseClient.auth.signOut();
+        isAdmin = false;
+        updateAdminUI();
+        showToast('Вы вышли из админки');
+      } else {
+        $('loginModal').classList.add('show');
+      }
+    });
+
+    function updateAdminUI() {
+      $('adminToggle').textContent = isAdmin ? 'Выйти из админки' : 'Войти в админку';
+      $('adminToggle').classList.toggle('active', isAdmin);
+      loadTracks();
+    }
+
+    $('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = $('file').files[0];
+      if (!file) return;
+
+      const btn = $('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Загрузка в облако...';
+
+      try {
+        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const { data: uploadData, error: uploadError } = await supabaseClient.storage
+          .from('audio')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabaseClient.storage.from('audio').getPublicUrl(fileName);
+
+        const { error: dbError } = await supabaseClient.from('tracks').insert([{
+          artist: $('artist').value.trim(),
+          title: $('title').value.trim(),
+          genre: $('genre').value.trim() || 'без жанра',
+          description: $('description').value.trim(),
+          type: $('type').value,
+          audio_url: urlData.publicUrl
+        }]);
+
+        if (dbError) throw dbError;
+
+        $('uploadForm').reset();
+        showToast('Трек успешно загружен! ✅');
+        loadTracks();
+      } catch (error) {
+        console.error(error);
+        showToast('Ошибка: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Отправить на модерацию';
+      }
+    });
+
+    async function loadTracks() {
+      let query = supabaseClient.from('tracks').select('*').order('created_at', { ascending: false });
+      
+      if (!isAdmin) {
+        query = query.eq('status', 'approved');
+      }
+
+      const { data: tracks, error } = await query;
+
+      if (error) {
+        tracksList.innerHTML = '<div class="empty">Ошибка загрузки треков.</div>';
+        return;
+      }
+
+      if (!tracks || tracks.length === 0) {
+        tracksList.innerHTML = '<div class="empty">Пока нет треков. Загрузите первый!</div>';
+        return;
+      }
+
+      tracksList.innerHTML = tracks.map(t => `
+        <div class="track ${t.vip ? 'vip' : ''}">
+          <div class="track-head">
+            <div>
+              <div class="track-title">${escapeHtml(t.title)}</div>
+              <div class="track-artist">${escapeHtml(t.artist)}</div>
+              <div style="margin-top:6px;">
+                <span class="tag">${escapeHtml(t.genre)}</span>
+                <span class="tag">${t.type === 'demo' ? 'демо' : 'релиз'}</span>
+                ${t.vip ? '<span class="tag vip">★ VIP</span>' : ''}
+                ${isAdmin && t.status === 'pending' ? '<span class="tag pending">на модерации</span>' : ''}
+                ${isAdmin && t.status === 'rejected' ? '<span class="tag" style="color:var(--danger)">отклонён</span>' : ''}
+              </div>
+            </div>
+          </div>
+          ${t.description ? `<div style="color:var(--muted);font-size:13px;margin-bottom:8px;">${escapeHtml(t.description)}</div>` : ''}
+          <audio controls src="${t.audio_url}"></audio>
+          ${isAdmin ? `
+            <div class="track-actions">
+              ${t.status !== 'approved' ? `<button class="btn btn-ghost" onclick="moderate('${t.id}','approved')">Одобрить</button>` : ''}
+              ${t.status !== 'rejected' ? `<button class="btn btn-ghost" onclick="moderate('${t.id}','rejected')">Отклонить</button>` : ''}
+              <button class="btn btn-ghost" onclick="toggleVip('${t.id}', ${t.vip})">${t.vip ? 'Снять VIP' : 'Сделать VIP'}</button>
+              <button class="btn btn-ghost" style="color:var(--danger)" onclick="removeTrack('${t.id}')">Удалить</button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    window.moderate = async function(id, status) {
+      await supabaseClient.from('tracks').update({ status }).eq('id', id);
+      loadTracks();
+    };
+    
+    window.toggleVip = async function(id, currentVip) {
+      await supabaseClient.from('tracks').update({ vip: !currentVip }).eq('id', id);
+      loadTracks();
+    };
+    
+    window.removeTrack = async function(id) {
+      if (!confirm('Удалить трек?')) return;
+      await supabaseClient.from('tracks').delete().eq('id', id);
+      loadTracks();
+    };
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
+    }
+
+    async function checkSession() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        isAdmin = true;
+        updateAdminUI();
+      } else {
+        loadTracks();
+      }
+    }
+    
+    checkSession();
+  </script>
+</body>
+  </html>
