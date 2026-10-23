@@ -12,8 +12,8 @@
       --vip: #f5b301; --danger: #ff5c5c; --radius: 14px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; padding-bottom: 80px; /* Место под нижний плеер */ }
-    header { padding: 20px 24px; border-bottom: 1px solid #232a38; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; padding-bottom: 80px; overflow-x: hidden; }
+    header { padding: 20px 24px; border-bottom: 1px solid #232a38; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; z-index: 10; background: var(--bg); }
     .logo { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
     .logo-text { background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .logo img { height: 45px; width: auto; border-radius: 8px; }
@@ -22,7 +22,6 @@
     .badge-admin.active { background: var(--accent); border-color: var(--accent); color: #fff; }
     main { flex: 1; width: 100%; max-width: 960px; margin: 0 auto; padding: 20px 20px 40px; }
     
-    /* Панель сортировки */
     .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
     .controls h2 { font-size: 18px; font-weight: 600; }
     .sort-select { background: var(--card); border: 1px solid #2a3142; color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; }
@@ -33,47 +32,53 @@
     .btn-ghost { background: transparent; border: 1px solid #2a3142; color: var(--muted); padding: 6px 12px; font-size: 12px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; }
     .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
     
-    /* Список треков */
     .tracks { display: flex; flex-direction: column; gap: 12px; }
     .track { background: var(--card); border: 1px solid #232a38; border-radius: var(--radius); padding: 16px 18px; transition: 0.2s; display: flex; flex-direction: column; gap: 8px; }
     .track:hover { background: var(--card-hover); }
     .track.vip { border-color: var(--vip); box-shadow: 0 0 0 1px rgba(245, 179, 1, 0.25); }
-    .track-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-    .track-title { font-weight: 600; font-size: 16px; color: #fff; }
-    .track-artist { color: var(--muted); font-size: 14px; }
+    
+    /* Обновленный вид карточки трека */
+    .track-main { display: flex; align-items: center; gap: 12px; }
+    .track-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: #0f131b; flex-shrink: 0; }
+    .track-info { flex: 1; overflow: hidden; }
+    .track-title { font-weight: 600; font-size: 16px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .track-artist { color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
     .track-desc { color: #a0a8b8; font-size: 13px; line-height: 1.4; background: #0f131b; padding: 8px 12px; border-radius: 8px; margin-top: 4px; }
     .tag { display: inline-block; font-size: 11px; padding: 3px 8px; border-radius: 6px; background: #232a38; color: var(--muted); margin-right: 6px; }
     .tag.vip { background: rgba(245, 179, 1, 0.15); color: var(--vip); }
     .tag.pending { background: rgba(245, 179, 1, 0.12); color: #e6b800; }
     
-    .track-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
-    .play-btn { background: var(--accent); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; flex-shrink: 0; }
+    .play-btn { background: var(--accent); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; flex-shrink: 0; }
     .play-btn:hover { opacity: 0.8; }
 
     /* НИЖНИЙ ПЛЕЕР */
-    .bottom-player {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: #161a22; border-top: 1px solid #2a3142;
-      padding: 10px 16px; display: none; align-items: center; gap: 12px; z-index: 999;
-      box-shadow: 0 -4px 12px rgba(0,0,0,0.5);
-    }
+    .bottom-player { position: fixed; bottom: 0; left: 0; right: 0; background: #161a22; border-top: 1px solid #2a3142; padding: 10px 16px; display: none; align-items: center; gap: 12px; z-index: 999; box-shadow: 0 -4px 12px rgba(0,0,0,0.5); cursor: pointer; }
     .bottom-player.active { display: flex; }
-    .bottom-player img { width: 40px; height: 40px; border-radius: 8px; background: #0f131b; object-fit: cover; }
-    .bp-info { flex: 1; overflow: hidden; }
+    .bottom-player img { width: 40px; height: 40px; border-radius: 8px; background: #0f131b; object-fit: cover; pointer-events: none; }
+    .bp-info { flex: 1; overflow: hidden; pointer-events: none; }
     .bp-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .bp-artist { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .bp-audio { display: none; } /* Скрываем стандартный плеер, управляем кнопкой */
-    .bp-btn { background: var(--accent); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .bp-expand { background: transparent; border: none; color: var(--text); font-size: 20px; cursor: pointer; padding: 0 10px; text-decoration: none; }
+    .bp-btn { background: var(--accent); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 2; }
+    
+    /* ВЫЕЗЖАЮЩИЙ ПЛЕЕР */
+    .full-player { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; padding: 20px; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+    .full-player.show { transform: translateY(0); }
+    .fp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .fp-close { background: transparent; border: none; color: var(--text); font-size: 32px; cursor: pointer; line-height: 1; }
+    .fp-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; max-width: 500px; margin: 0 auto; }
+    .fp-cover { width: 100%; aspect-ratio: 1/1; background: var(--card); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); margin-bottom: 30px; font-size: 80px; opacity: 0.8; overflow: hidden; }
+    .fp-cover img { width: 100%; height: 100%; object-fit: cover; }
+    .fp-cover.vip-cover { border: 2px solid var(--vip); box-shadow: 0 0 30px rgba(245, 179, 1, 0.2); }
+    .fp-title { font-size: 24px; font-weight: 700; margin-bottom: 5px; }
+    .fp-artist { font-size: 18px; color: var(--muted); margin-bottom: 20px; }
+    .fp-controls { width: 100%; margin-top: 20px; }
 
-    footer { border-top: 1px solid #232a38; padding: 24px 20px; text-align: center; color: var(--muted); font-size: 13px; }
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1c2130; border: 1px solid var(--accent); color: var(--text); padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 1001; }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1002; padding: 20px; }
     .modal-overlay.show { display: flex; }
     .modal { background: var(--card); border: 1px solid #2a3142; border-radius: var(--radius); padding: 24px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
-    .modal h3 { margin-bottom: 8px; text-align: center; color: var(--text); }
-    .modal .error { color: var(--danger); font-size: 12px; text-align: center; display: none; }
-    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1c2130; border: 1px solid var(--accent); color: var(--text); padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 1001; }
-    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
     input[type="email"], input[type="password"] { width: 100%; background: #0f131b; border: 1px solid #2a3142; border-radius: 10px; padding: 12px; color: var(--text); font-size: 14px; outline: none; }
   </style>
 </head>
@@ -110,16 +115,32 @@
   <footer>сделано командой PlayTools для бесплатных пользователей</footer>
 
   <!-- НИЖНИЙ ПЛЕЕР -->
-  <div class="bottom-player" id="bottomPlayer">
+  <div class="bottom-player" id="bottomPlayer" onclick="openFullPlayer()">
     <img src="logo.jpg" alt="Cover" id="bpCover">
     <div class="bp-info">
       <div class="bp-title" id="bpTitle">Название</div>
       <div class="bp-artist" id="bpArtist">Артист</div>
     </div>
-    <button class="bp-btn" id="bpPlayBtn">▶</button>
-    <a href="#" class="bp-expand" id="bpExpandBtn">⤢</a>
-    <!-- Скрытый аудиоплеер -->
-    <audio id="mainAudio" class="bp-audio"></audio>
+    <button class="bp-btn" id="bpPlayBtn" onclick="event.stopPropagation(); togglePlay()">▶</button>
+    <audio id="mainAudio"></audio>
+  </div>
+
+  <!-- ПОЛНОЭКРАННЫЙ ПЛЕЕР -->
+  <div class="full-player" id="fullPlayer">
+    <div class="fp-header">
+      <button class="fp-close" onclick="closeFullPlayer()">⌄</button>
+      <div style="font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;">Сейчас играет</div>
+      <div style="width: 32px;"></div>
+    </div>
+    <div class="fp-content">
+      <div class="fp-cover" id="fpCover"><img src="logo.jpg" alt="Cover"></div>
+      <div class="fp-title" id="fpTitle">Название</div>
+      <div class="fp-artist" id="fpArtist">Артист</div>
+      <div class="tags" id="fpTags" style="display:flex; gap: 8px; margin-bottom: 20px;"></div>
+      <div class="fp-controls">
+        <audio controls id="fpAudio" style="width: 100%;"></audio>
+      </div>
+    </div>
   </div>
 
   <div class="modal-overlay" id="loginModal">
@@ -128,7 +149,7 @@
       <form id="loginForm">
         <input type="email" id="loginEmail" placeholder="Email" required>
         <input type="password" id="loginPassword" placeholder="Пароль" required>
-        <div class="error" id="loginError">Неверный email или пароль</div>
+        <div class="error" id="loginError" style="color:var(--danger); font-size:12px; display:none; text-align:center;">Неверный email или пароль</div>
         <button type="submit" class="btn" style="margin-top:10px;">Войти</button>
       </form>
       <button class="btn-ghost" id="closeModal" style="width:100%; margin-top:5px;">Отмена</button>
@@ -146,54 +167,90 @@
     let currentTracks = [];
     const $ = (id) => document.getElementById(id);
     const tracksList = $('tracksList');
-    const toastEl = $('toast');
     const sortSelect = $('sortSelect');
     
-    // Плеер
+    // Элементы плеера
     const bottomPlayer = $('bottomPlayer');
     const mainAudio = $('mainAudio');
     const bpPlayBtn = $('bpPlayBtn');
-    const bpTitle = $('bpTitle');
-    const bpArtist = $('bpArtist');
-    const bpExpandBtn = $('bpExpandBtn');
-    let currentPlayingId = null;
+    const fullPlayer = $('fullPlayer');
+    const fpAudio = $('fpAudio');
 
-    function showToast(msg) {
-      toastEl.textContent = msg;
-      toastEl.classList.add('show');
-      clearTimeout(toastEl._t);
-      toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 3000);
-    }
-
-    // --- УПРАВЛЕНИЕ ПЛЕЕРОМ ---
-    window.playTrack = function(track) {
-      if (currentPlayingId === track.id) {
-        // Если нажат тот же трек — пауза/плей
-        if (mainAudio.paused) mainAudio.play();
-        else mainAudio.pause();
-        return;
-      }
+    // === ЛОГИКА ПЛЕЕРА ===
+    function setupTrack(track) {
+      localStorage.setItem('sn_current_track', JSON.stringify(track));
+      $('bpTitle').textContent = track.title;
+      $('bpArtist').textContent = track.artist;
+      $('fpTitle').textContent = track.title;
+      $('fpArtist').textContent = track.artist;
       
-      currentPlayingId = track.id;
-      bpTitle.textContent = track.title;
-      bpArtist.textContent = track.artist;
-      bpExpandBtn.href = `player.html?id=${track.id}`;
+      // Обложка или логотип
+      const coverSrc = track.cover_url ? track.cover_url : 'logo.jpg';
+      $('bpCover').src = coverSrc;
+      $('fpCover').innerHTML = `<img src="${coverSrc}" alt="Cover">`;
+
+      $('fpTags').innerHTML = `
+        <span class="tag">${track.genre}</span>
+        <span class="tag">${track.type === 'demo' ? 'демо' : 'релиз'}</span>
+        ${track.vip ? '<span class="tag vip">★ VIP</span>' : ''}
+      `;
+      $('fpCover').className = `fp-cover ${track.vip ? 'vip-cover' : ''}`;
       
       mainAudio.src = track.audio_url;
-      mainAudio.play();
+      fpAudio.src = track.audio_url;
       bottomPlayer.classList.add('active');
+    }
+
+    window.playTrack = function(track) {
+      const currentTrack = JSON.parse(localStorage.getItem('sn_current_track'));
+      if (currentTrack && currentTrack.id === track.id) {
+        togglePlay();
+        return;
+      }
+      setupTrack(track);
+      mainAudio.play(); fpAudio.play();
+      localStorage.setItem('sn_is_playing', 'true');
     };
 
-    mainAudio.addEventListener('play', () => { bpPlayBtn.textContent = '⏸'; });
-    mainAudio.addEventListener('pause', () => { bpPlayBtn.textContent = '▶'; });
-    mainAudio.addEventListener('ended', () => { bpPlayBtn.textContent = '▶'; });
+    window.togglePlay = function() {
+      if (mainAudio.paused) {
+        mainAudio.play(); fpAudio.play();
+        localStorage.setItem('sn_is_playing', 'true');
+      } else {
+        mainAudio.pause(); fpAudio.pause();
+        localStorage.setItem('sn_is_playing', 'false');
+      }
+    };
 
-    bpPlayBtn.addEventListener('click', () => {
-      if (mainAudio.paused) mainAudio.play();
-      else mainAudio.pause();
+    window.openFullPlayer = function() { fullPlayer.classList.add('show'); };
+    window.closeFullPlayer = function() { fullPlayer.classList.remove('show'); };
+
+    mainAudio.addEventListener('play', () => { bpPlayBtn.textContent = '⏸'; fpAudio.play(); });
+    mainAudio.addEventListener('pause', () => { bpPlayBtn.textContent = '▶'; fpAudio.pause(); });
+    mainAudio.addEventListener('timeupdate', () => {
+      localStorage.setItem('sn_time', mainAudio.currentTime);
+      if(Math.abs(fpAudio.currentTime - mainAudio.currentTime) > 0.5) fpAudio.currentTime = mainAudio.currentTime;
+    });
+    fpAudio.addEventListener('play', () => { mainAudio.play(); });
+    fpAudio.addEventListener('pause', () => { mainAudio.pause(); });
+    fpAudio.addEventListener('timeupdate', () => {
+      if(Math.abs(mainAudio.currentTime - fpAudio.currentTime) > 0.5) mainAudio.currentTime = fpAudio.currentTime;
     });
 
-    // --- СОРТИРОВКА ---
+    function restorePlayer() {
+      const savedTrack = JSON.parse(localStorage.getItem('sn_current_track'));
+      const savedTime = parseFloat(localStorage.getItem('sn_time')) || 0;
+      const isPlaying = localStorage.getItem('sn_is_playing') === 'true';
+
+      if (savedTrack) {
+        setupTrack(savedTrack);
+        mainAudio.currentTime = savedTime;
+        fpAudio.currentTime = savedTime;
+        if (isPlaying) { mainAudio.play().catch(() => { bpPlayBtn.textContent = '▶'; }); }
+      }
+    }
+
+    // === ЛОГИКА СПИСКА ===
     sortSelect.addEventListener('change', () => renderTracks());
 
     function renderTracks() {
@@ -205,24 +262,22 @@
       let sorted = [...currentTracks];
       const sortBy = sortSelect.value;
 
-      // Сначала всегда сортируем по VIP (true = 1, false = 0)
       sorted.sort((a, b) => (b.vip ? 1 : 0) - (a.vip ? 1 : 0));
-
-      // Затем внутри VIP и обычных сортируем по дате
       sorted.sort((a, b) => {
-        // Если VIP статус разный, не меняем порядок (VIP остаются сверху)
         if (a.vip !== b.vip) return 0;
-        
         const dateA = new Date(a.created_at).getTime();
         const dateB = new Date(b.created_at).getTime();
         if (sortBy === 'old') return dateA - dateB;
-        return dateB - dateA; // vip_new и new
+        return dateB - dateA;
       });
 
-      tracksList.innerHTML = sorted.map(t => `
+      tracksList.innerHTML = sorted.map(t => {
+        const coverSrc = t.cover_url ? t.cover_url : 'logo.jpg';
+        return `
         <div class="track ${t.vip ? 'vip' : ''}">
-          <div class="track-head">
-            <div>
+          <div class="track-main">
+            <img src="${coverSrc}" class="track-cover" alt="Cover">
+            <div class="track-info">
               <div class="track-title">${escapeHtml(t.title)}</div>
               <div class="track-artist">${escapeHtml(t.artist)}</div>
             </div>
@@ -238,7 +293,7 @@
           ${t.description ? `<div class="track-desc">${escapeHtml(t.description)}</div>` : ''}
           
           ${isAdmin ? `
-            <div class="track-actions" style="margin-top: 12px; border-top: 1px solid #232a38; padding-top: 12px;">
+            <div class="track-actions" style="margin-top: 12px; border-top: 1px solid #232a38; padding-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
               ${t.status !== 'approved' ? `<button class="btn-ghost" onclick="moderate('${t.id}','approved')">Одобрить</button>` : ''}
               ${t.status !== 'rejected' ? `<button class="btn-ghost" onclick="moderate('${t.id}','rejected')">Отклонить</button>` : ''}
               <button class="btn-ghost" onclick="toggleVip('${t.id}', ${t.vip})">${t.vip ? 'Снять VIP' : 'Сделать VIP'}</button>
@@ -246,38 +301,24 @@
             </div>
           ` : ''}
         </div>
-      `).join('');
+      `}).join('');
     }
 
-    // --- АВТОРИЗАЦИЯ И ДАННЫЕ ---
+    // === АВТОРИЗАЦИЯ И БАЗА ===
     $('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = $('loginEmail').value.trim();
-      const pass = $('loginPassword').value;
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
-      
-      if (error) {
-        $('loginError').style.display = 'block';
-      } else {
-        isAdmin = true;
-        $('loginModal').classList.remove('show');
-        $('loginForm').reset();
-        $('loginError').style.display = 'none';
-        updateAdminUI();
-        showToast('Добро пожаловать в админку!');
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email: $('loginEmail').value, password: $('loginPassword').value });
+      if (error) { $('loginError').style.display = 'block'; } 
+      else {
+        isAdmin = true; $('loginModal').classList.remove('show'); $('loginForm').reset(); $('loginError').style.display = 'none';
+        updateAdminUI(); showToast('Добро пожаловать в админку!');
       }
     });
 
     $('closeModal').addEventListener('click', () => $('loginModal').classList.remove('show'));
     $('adminToggle').addEventListener('click', async () => {
-      if (isAdmin) {
-        await supabaseClient.auth.signOut();
-        isAdmin = false;
-        updateAdminUI();
-        showToast('Вы вышли из админки');
-      } else {
-        $('loginModal').classList.add('show');
-      }
+      if (isAdmin) { await supabaseClient.auth.signOut(); isAdmin = false; updateAdminUI(); showToast('Вы вышли из админки'); }
+      else { $('loginModal').classList.add('show'); }
     });
 
     function updateAdminUI() {
@@ -291,10 +332,8 @@
       try {
         let query = supabaseClient.from('tracks').select('*');
         if (!isAdmin) query = query.eq('status', 'approved');
-        
         const { data: tracks, error } = await query;
         if (error) throw error;
-
         currentTracks = tracks || [];
         renderTracks();
       } catch (err) {
@@ -306,13 +345,8 @@
     window.toggleVip = async function(id, currentVip) { await supabaseClient.from('tracks').update({ vip: !currentVip }).eq('id', id); loadTracks(); };
     window.removeTrack = async function(id) { if (!confirm('Удалить трек?')) return; await supabaseClient.from('tracks').delete().eq('id', id); loadTracks(); };
     function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function showToast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000); }
 
-    async function checkSession() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session) isAdmin = true;
-      updateAdminUI();
-    }
-    checkSession();
-  </script>
-</body>
-</html>
+    async function init() {
+      restorePlayer();
+      const { data: { session } } = await supabaseClient.auth.getSession(
