@@ -14,18 +14,21 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; }
     header { padding: 20px 24px; border-bottom: 1px solid #232a38; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-    .logo { font-size: 22px; font-weight: 700; background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
-    .back-btn { background: transparent; border: 1px solid #2f3748; color: var(--muted); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; text-decoration: none; transition: 0.2s; }
-    .back-btn:hover { border-color: var(--accent); color: var(--text); }
+    .logo { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    .logo-text { background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .btn-back { background: transparent; border: 1px solid #2a3142; color: var(--muted); padding: 8px 16px; border-radius: 8px; cursor: pointer; text-decoration: none; font-size: 13px; transition: 0.2s; }
+    .btn-back:hover { border-color: var(--accent); color: var(--text); }
     main { flex: 1; width: 100%; max-width: 600px; margin: 0 auto; padding: 32px 20px 60px; }
-    h2 { font-size: 20px; margin-bottom: 16px; font-weight: 600; text-align: center; }
     .card { background: var(--card); border: 1px solid #232a38; border-radius: var(--radius); padding: 24px; }
-    .upload-form { display: grid; gap: 12px; }
-    input[type="text"], textarea, select, input[type="file"] { width: 100%; background: #0f131b; border: 1px solid #2a3142; border-radius: 10px; padding: 12px; color: var(--text); font-size: 14px; outline: none; }
+    h2 { font-size: 20px; margin-bottom: 20px; font-weight: 600; text-align: center; }
+    .upload-form { display: grid; gap: 16px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+    input[type="text"], textarea, select, input[type="file"] { width: 100%; background: #0f131b; border: 1px solid #2a3142; border-radius: 10px; padding: 14px; color: var(--text); font-size: 15px; font-family: inherit; outline: none; transition: 0.2s; }
     input:focus, textarea:focus, select:focus { border-color: var(--accent); }
-    textarea { resize: vertical; min-height: 70px; }
-    input[type="file"]::file-selector-button { background: var(--accent); border: none; color: #fff; padding: 8px 14px; border-radius: 8px; cursor: pointer; margin-right: 12px; font-size: 13px; }
-    .btn { background: linear-gradient(90deg, var(--accent), #8a7bff); border: none; color: #fff; padding: 14px 20px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    textarea { resize: vertical; min-height: 80px; }
+    input[type="file"]::file-selector-button { background: var(--accent); border: none; color: #fff; padding: 10px 16px; border-radius: 8px; cursor: pointer; margin-right: 12px; font-size: 14px; }
+    .btn { background: linear-gradient(90deg, var(--accent), #8a7bff); border: none; color: #fff; padding: 16px 20px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 10px; }
     .btn:hover { opacity: 0.9; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     footer { border-top: 1px solid #232a38; padding: 24px 20px; text-align: center; color: var(--muted); font-size: 13px; }
@@ -35,21 +38,28 @@
 </head>
 <body>
   <header>
-    <a href="index.html" class="logo">🎵 SN music</a>
-    <a href="index.html" class="back-btn">← На главную</a>
+    <div class="logo">
+      <img src="logo.jpg" alt="Logo" style="height: 40px; width: auto; mix-blend-mode: screen;">
+      <span class="logo-text">SN music</span>
+    </div>
+    <a href="index.html" class="btn-back">← На главную</a>
   </header>
 
   <main>
-    <h2>Загрузить трек или демо</h2>
     <div class="card">
+      <h2>Загрузить трек или демо</h2>
       <form class="upload-form" id="uploadForm">
-        <input type="text" id="artist" placeholder="Имя артиста" required>
-        <input type="text" id="title" placeholder="Название трека" required>
-        <input type="text" id="genre" placeholder="Жанр (например, hip-hop)">
-        <select id="type">
-          <option value="release">Готовый релиз</option>
-          <option value="demo">Демо / черновик</option>
-        </select>
+        <div class="row">
+          <input type="text" id="artist" placeholder="Имя артиста" required>
+          <input type="text" id="title" placeholder="Название трека" required>
+        </div>
+        <div class="row">
+          <input type="text" id="genre" placeholder="Жанр (например, hip-hop)">
+          <select id="type">
+            <option value="release">Готовый релиз</option>
+            <option value="demo">Демо / черновик</option>
+          </select>
+        </div>
         <textarea id="description" placeholder="Пара слов о треке (необязательно)"></textarea>
         <input type="file" id="file" accept="audio/*" required>
         <button type="submit" class="btn" id="submitBtn">Отправить на модерацию</button>
@@ -63,12 +73,12 @@
   <script>
     const SUPABASE_URL = 'https://fgljnqcxjbpunlfwoktb.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnbGpucWN4amJwdW5sZndva3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODUzMzgsImV4cCI6MjEwODI2MTMzOH0.LPeIh77qTlhg8NmP5a6hZOVEDSgQeB57V6l8SMhXoeo';
-
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     const $ = (id) => document.getElementById(id);
+    const toastEl = $('toast');
 
     function showToast(msg) {
-      const toastEl = $('toast');
       toastEl.textContent = msg;
       toastEl.classList.add('show');
       clearTimeout(toastEl._t);
@@ -86,7 +96,10 @@
 
       try {
         const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-        const { error: uploadError } = await supabaseClient.storage.from('audio').upload(fileName, file);
+        const { data: uploadData, error: uploadError } = await supabaseClient.storage
+          .from('audio')
+          .upload(fileName, file);
+
         if (uploadError) throw uploadError;
 
         const { data: urlData } = supabaseClient.storage.from('audio').getPublicUrl(fileName);
@@ -104,10 +117,11 @@
 
         $('uploadForm').reset();
         showToast('Трек успешно загружен! ✅');
-        setTimeout(() => { window.location.href = 'index.html'; }, 2000); // Возврат на главную через 2 сек
-        
+        setTimeout(() => { window.location.href = 'index.html'; }, 1500); // Перекидываем на главную через 1.5 сек
       } catch (error) {
+        console.error(error);
         showToast('Ошибка: ' + error.message);
+      } finally {
         btn.disabled = false;
         btn.textContent = 'Отправить на модерацию';
       }
