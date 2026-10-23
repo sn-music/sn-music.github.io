@@ -12,7 +12,8 @@
       --vip: #f5b301; --danger: #ff5c5c; --radius: 14px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; padding-bottom: 80px; overflow-x: hidden; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; padding-bottom: 90px; overflow-x: hidden; }
+    
     header { padding: 20px 24px; border-bottom: 1px solid #232a38; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; z-index: 10; background: var(--bg); }
     .logo { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
     .logo-text { background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -20,11 +21,12 @@
     .badge-admin { background: transparent; border: 1px solid #2f3748; color: var(--muted); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: 0.2s; }
     .badge-admin:hover { border-color: var(--accent); color: var(--text); }
     .badge-admin.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    
     main { flex: 1; width: 100%; max-width: 960px; margin: 0 auto; padding: 20px 20px 40px; }
     
     .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
     .controls h2 { font-size: 18px; font-weight: 600; }
-    .sort-select { background: var(--card); border: 1px solid #2a3142; color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; }
+    .sort-select { background: var(--card); border: 1px solid #2a3142; color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; cursor: pointer; }
 
     .card { background: var(--card); border: 1px solid #232a38; border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
     .btn { background: linear-gradient(90deg, var(--accent), #8a7bff); border: none; color: #fff; padding: 14px 20px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; display: block; text-align: center; text-decoration: none; width: 100%; }
@@ -37,7 +39,6 @@
     .track:hover { background: var(--card-hover); }
     .track.vip { border-color: var(--vip); box-shadow: 0 0 0 1px rgba(245, 179, 1, 0.25); }
     
-    /* Обновленный вид карточки трека */
     .track-main { display: flex; align-items: center; gap: 12px; }
     .track-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: #0f131b; flex-shrink: 0; }
     .track-info { flex: 1; overflow: hidden; }
@@ -52,7 +53,7 @@
     .play-btn { background: var(--accent); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; flex-shrink: 0; }
     .play-btn:hover { opacity: 0.8; }
 
-    /* НИЖНИЙ ПЛЕЕР */
+    /* ПЛЕЕРЫ */
     .bottom-player { position: fixed; bottom: 0; left: 0; right: 0; background: #161a22; border-top: 1px solid #2a3142; padding: 10px 16px; display: none; align-items: center; gap: 12px; z-index: 999; box-shadow: 0 -4px 12px rgba(0,0,0,0.5); cursor: pointer; }
     .bottom-player.active { display: flex; }
     .bottom-player img { width: 40px; height: 40px; border-radius: 8px; background: #0f131b; object-fit: cover; pointer-events: none; }
@@ -61,7 +62,6 @@
     .bp-artist { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .bp-btn { background: var(--accent); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 2; }
     
-    /* ВЫЕЗЖАЮЩИЙ ПЛЕЕР */
     .full-player { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; padding: 20px; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
     .full-player.show { transform: translateY(0); }
     .fp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
@@ -74,8 +74,12 @@
     .fp-artist { font-size: 18px; color: var(--muted); margin-bottom: 20px; }
     .fp-controls { width: 100%; margin-top: 20px; }
 
+    /* ИСПРАВЛЕННЫЙ ФУТЕР */
+    footer { width: 100%; border-top: 1px solid #232a38; padding: 24px 20px; color: var(--muted); font-size: 13px; display: flex; justify-content: center; align-items: center; text-align: center; }
+
     .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1c2130; border: 1px solid var(--accent); color: var(--text); padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 1001; }
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1002; padding: 20px; }
     .modal-overlay.show { display: flex; }
     .modal { background: var(--card); border: 1px solid #2a3142; border-radius: var(--radius); padding: 24px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
@@ -145,14 +149,14 @@
 
   <div class="modal-overlay" id="loginModal">
     <div class="modal">
-      <h3>Вход в админку</h3>
+      <h3 style="text-align:center; margin-bottom:10px;">Вход в админку</h3>
       <form id="loginForm">
         <input type="email" id="loginEmail" placeholder="Email" required>
-        <input type="password" id="loginPassword" placeholder="Пароль" required>
-        <div class="error" id="loginError" style="color:var(--danger); font-size:12px; display:none; text-align:center;">Неверный email или пароль</div>
-        <button type="submit" class="btn" style="margin-top:10px;">Войти</button>
+        <input type="password" id="loginPassword" placeholder="Пароль" style="margin-top:10px;" required>
+        <div class="error" id="loginError" style="color:var(--danger); font-size:12px; display:none; text-align:center; margin-top:8px;">Неверный email или пароль</div>
+        <button type="submit" class="btn" style="margin-top:15px;">Войти</button>
       </form>
-      <button class="btn-ghost" id="closeModal" style="width:100%; margin-top:5px;">Отмена</button>
+      <button class="btn-ghost" id="closeModal" style="width:100%; margin-top:10px;">Отмена</button>
     </div>
   </div>
 
@@ -169,14 +173,17 @@
     const tracksList = $('tracksList');
     const sortSelect = $('sortSelect');
     
-    // Элементы плеера
+    // Плеер
     const bottomPlayer = $('bottomPlayer');
     const mainAudio = $('mainAudio');
     const bpPlayBtn = $('bpPlayBtn');
     const fullPlayer = $('fullPlayer');
     const fpAudio = $('fpAudio');
 
-    // === ЛОГИКА ПЛЕЕРА ===
+    function showToast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000); }
+    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    // === ПЛЕЕР ===
     function setupTrack(track) {
       localStorage.setItem('sn_current_track', JSON.stringify(track));
       $('bpTitle').textContent = track.title;
@@ -184,13 +191,12 @@
       $('fpTitle').textContent = track.title;
       $('fpArtist').textContent = track.artist;
       
-      // Обложка или логотип
       const coverSrc = track.cover_url ? track.cover_url : 'logo.jpg';
       $('bpCover').src = coverSrc;
       $('fpCover').innerHTML = `<img src="${coverSrc}" alt="Cover">`;
 
       $('fpTags').innerHTML = `
-        <span class="tag">${track.genre}</span>
+        <span class="tag">${escapeHtml(track.genre)}</span>
         <span class="tag">${track.type === 'demo' ? 'демо' : 'релиз'}</span>
         ${track.vip ? '<span class="tag vip">★ VIP</span>' : ''}
       `;
@@ -201,9 +207,13 @@
       bottomPlayer.classList.add('active');
     }
 
-    window.playTrack = function(track) {
-      const currentTrack = JSON.parse(localStorage.getItem('sn_current_track'));
-      if (currentTrack && currentTrack.id === track.id) {
+    // Передача только ID, чтобы избежать багов с кавычками
+    window.playTrack = function(id) {
+      const track = currentTracks.find(t => t.id === id) || JSON.parse(localStorage.getItem('sn_current_track'));
+      if(!track) return;
+
+      const savedTrack = JSON.parse(localStorage.getItem('sn_current_track'));
+      if (savedTrack && savedTrack.id === track.id) {
         togglePlay();
         return;
       }
@@ -225,32 +235,35 @@
     window.openFullPlayer = function() { fullPlayer.classList.add('show'); };
     window.closeFullPlayer = function() { fullPlayer.classList.remove('show'); };
 
-    mainAudio.addEventListener('play', () => { bpPlayBtn.textContent = '⏸'; fpAudio.play(); });
-    mainAudio.addEventListener('pause', () => { bpPlayBtn.textContent = '▶'; fpAudio.pause(); });
+    mainAudio.addEventListener('play', () => { bpPlayBtn.textContent = '⏸'; if(fpAudio.paused) fpAudio.play(); });
+    mainAudio.addEventListener('pause', () => { bpPlayBtn.textContent = '▶'; if(!fpAudio.paused) fpAudio.pause(); });
     mainAudio.addEventListener('timeupdate', () => {
       localStorage.setItem('sn_time', mainAudio.currentTime);
       if(Math.abs(fpAudio.currentTime - mainAudio.currentTime) > 0.5) fpAudio.currentTime = mainAudio.currentTime;
     });
-    fpAudio.addEventListener('play', () => { mainAudio.play(); });
-    fpAudio.addEventListener('pause', () => { mainAudio.pause(); });
+    
+    fpAudio.addEventListener('play', () => { if(mainAudio.paused) mainAudio.play(); });
+    fpAudio.addEventListener('pause', () => { if(!mainAudio.paused) mainAudio.pause(); });
     fpAudio.addEventListener('timeupdate', () => {
       if(Math.abs(mainAudio.currentTime - fpAudio.currentTime) > 0.5) mainAudio.currentTime = fpAudio.currentTime;
     });
 
     function restorePlayer() {
-      const savedTrack = JSON.parse(localStorage.getItem('sn_current_track'));
-      const savedTime = parseFloat(localStorage.getItem('sn_time')) || 0;
-      const isPlaying = localStorage.getItem('sn_is_playing') === 'true';
+      try {
+        const savedTrack = JSON.parse(localStorage.getItem('sn_current_track'));
+        const savedTime = parseFloat(localStorage.getItem('sn_time')) || 0;
+        const isPlaying = localStorage.getItem('sn_is_playing') === 'true';
 
-      if (savedTrack) {
-        setupTrack(savedTrack);
-        mainAudio.currentTime = savedTime;
-        fpAudio.currentTime = savedTime;
-        if (isPlaying) { mainAudio.play().catch(() => { bpPlayBtn.textContent = '▶'; }); }
-      }
+        if (savedTrack) {
+          setupTrack(savedTrack);
+          mainAudio.currentTime = savedTime;
+          fpAudio.currentTime = savedTime;
+          if (isPlaying) { mainAudio.play().catch(() => { bpPlayBtn.textContent = '▶'; }); }
+        }
+      } catch(e) { console.log('Ошибка восстановления плеера'); }
     }
 
-    // === ЛОГИКА СПИСКА ===
+    // === СПИСОК ТРЕКОВ ===
     sortSelect.addEventListener('change', () => renderTracks());
 
     function renderTracks() {
@@ -281,7 +294,7 @@
               <div class="track-title">${escapeHtml(t.title)}</div>
               <div class="track-artist">${escapeHtml(t.artist)}</div>
             </div>
-            <button class="play-btn" onclick='playTrack(${JSON.stringify(t).replace(/'/g, "&#39;")})'>▶</button>
+            <button class="play-btn" onclick='playTrack("${t.id}")'>▶</button>
           </div>
           <div>
             <span class="tag">${escapeHtml(t.genre)}</span>
@@ -304,7 +317,7 @@
       `}).join('');
     }
 
-    // === АВТОРИЗАЦИЯ И БАЗА ===
+    // === АВТОРИЗАЦИЯ ===
     $('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email: $('loginEmail').value, password: $('loginPassword').value });
@@ -341,12 +354,4 @@
       }
     }
 
-    window.moderate = async function(id, status) { await supabaseClient.from('tracks').update({ status }).eq('id', id); loadTracks(); };
-    window.toggleVip = async function(id, currentVip) { await supabaseClient.from('tracks').update({ vip: !currentVip }).eq('id', id); loadTracks(); };
-    window.removeTrack = async function(id) { if (!confirm('Удалить трек?')) return; await supabaseClient.from('tracks').delete().eq('id', id); loadTracks(); };
-    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-    function showToast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000); }
-
-    async function init() {
-      restorePlayer();
-      const { data: { session } } = await supabaseClient.auth.getSession(
+ 
