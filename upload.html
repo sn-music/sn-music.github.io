@@ -2,20 +2,21 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Загрузка трека — SN music</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg: #0d0f14; --card: #161a22; --text: #e6e9ef;
       --muted: #8b93a7; --accent: #6c5ce7; --accent-2: #00d4aa;
-      --radius: 14px;
+      --radius: 14px; --vip: #f5b301;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; }
-    header { padding: 20px 24px; border-bottom: 1px solid #232a38; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; padding-bottom: 80px; overflow-x: hidden; }
+    header { padding: 20px 24px; border-bottom: 1px solid #232a38; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; z-index: 10; background: var(--bg); }
     .logo { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
     .logo-text { background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo img { height: 45px; width: auto; border-radius: 8px; }
     .btn-back { background: transparent; border: 1px solid #2a3142; color: var(--muted); padding: 8px 16px; border-radius: 8px; cursor: pointer; text-decoration: none; font-size: 13px; transition: 0.2s; }
     .btn-back:hover { border-color: var(--accent); color: var(--text); }
     main { flex: 1; width: 100%; max-width: 600px; margin: 0 auto; padding: 32px 20px 60px; }
@@ -28,18 +29,41 @@
     input:focus, textarea:focus, select:focus { border-color: var(--accent); }
     textarea { resize: vertical; min-height: 80px; }
     input[type="file"]::file-selector-button { background: var(--accent); border: none; color: #fff; padding: 10px 16px; border-radius: 8px; cursor: pointer; margin-right: 12px; font-size: 14px; }
+    .file-label { font-size: 13px; color: var(--muted); margin-bottom: -8px; display: block; }
     .btn { background: linear-gradient(90deg, var(--accent), #8a7bff); border: none; color: #fff; padding: 16px 20px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 10px; }
     .btn:hover { opacity: 0.9; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     footer { border-top: 1px solid #232a38; padding: 24px 20px; text-align: center; color: var(--muted); font-size: 13px; }
-    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1c2130; border: 1px solid var(--accent); color: var(--text); padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 1001; }
+    .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1c2130; border: 1px solid var(--accent); color: var(--text); padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 1001; }
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* ПЛЕЕР */
+    .bottom-player { position: fixed; bottom: 0; left: 0; right: 0; background: #161a22; border-top: 1px solid #2a3142; padding: 10px 16px; display: none; align-items: center; gap: 12px; z-index: 999; box-shadow: 0 -4px 12px rgba(0,0,0,0.5); cursor: pointer; }
+    .bottom-player.active { display: flex; }
+    .bottom-player img { width: 40px; height: 40px; border-radius: 8px; background: #0f131b; object-fit: cover; pointer-events: none; }
+    .bp-info { flex: 1; overflow: hidden; pointer-events: none; }
+    .bp-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bp-artist { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bp-btn { background: var(--accent); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 2; }
+    .full-player { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; padding: 20px; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+    .full-player.show { transform: translateY(0); }
+    .fp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .fp-close { background: transparent; border: none; color: var(--text); font-size: 32px; cursor: pointer; line-height: 1; }
+    .fp-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; max-width: 500px; margin: 0 auto; }
+    .fp-cover { width: 100%; aspect-ratio: 1/1; background: var(--card); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); margin-bottom: 30px; font-size: 80px; opacity: 0.8; overflow: hidden; }
+    .fp-cover img { width: 100%; height: 100%; object-fit: cover; }
+    .fp-cover.vip-cover { border: 2px solid var(--vip); box-shadow: 0 0 30px rgba(245, 179, 1, 0.2); }
+    .fp-title { font-size: 24px; font-weight: 700; margin-bottom: 5px; }
+    .fp-artist { font-size: 18px; color: var(--muted); margin-bottom: 20px; }
+    .fp-controls { width: 100%; margin-top: 20px; }
+    .tag { display: inline-block; font-size: 11px; padding: 3px 8px; border-radius: 6px; background: #232a38; color: var(--muted); margin-right: 6px; }
+    .tag.vip { background: rgba(245, 179, 1, 0.15); color: var(--vip); }
   </style>
 </head>
 <body>
   <header>
     <div class="logo">
-      <img src="logo.jpg" alt="Logo" style="height: 40px; width: auto; mix-blend-mode: screen;">
+      <img src="logo.jpg" alt="Logo">
       <span class="logo-text">SN music</span>
     </div>
     <a href="index.html" class="btn-back">← На главную</a>
@@ -61,7 +85,13 @@
           </select>
         </div>
         <textarea id="description" placeholder="Пара слов о треке (необязательно)"></textarea>
+        
+        <span class="file-label">Аудиофайл (MP3):</span>
         <input type="file" id="file" accept="audio/*" required>
+
+        <span class="file-label">Обложка (картинка, необязательно):</span>
+        <input type="file" id="coverFile" accept="image/*">
+
         <button type="submit" class="btn" id="submitBtn">Отправить на модерацию</button>
       </form>
     </div>
@@ -70,56 +100,159 @@
   <footer>сделано командой PlayTools для бесплатных пользователей</footer>
   <div class="toast" id="toast"></div>
 
+  <!-- ПЛЕЕР -->
+  <div class="bottom-player" id="bottomPlayer" onclick="openFullPlayer()">
+    <img src="logo.jpg" alt="Cover" id="bpCover">
+    <div class="bp-info">
+      <div class="bp-title" id="bpTitle">Название</div>
+      <div class="bp-artist" id="bpArtist">Артист</div>
+    </div>
+    <button class="bp-btn" id="bpPlayBtn" onclick="event.stopPropagation(); togglePlay()">▶</button>
+    <audio id="mainAudio"></audio>
+  </div>
+
+  <div class="full-player" id="fullPlayer">
+    <div class="fp-header">
+      <button class="fp-close" onclick="closeFullPlayer()">⌄</button>
+      <div style="font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;">Сейчас играет</div>
+      <div style="width: 32px;"></div>
+    </div>
+    <div class="fp-content">
+      <div class="fp-cover" id="fpCover"><img src="logo.jpg" alt="Cover"></div>
+      <div class="fp-title" id="fpTitle">Название</div>
+      <div class="fp-artist" id="fpArtist">Артист</div>
+      <div class="tags" id="fpTags" style="display:flex; gap: 8px; margin-bottom: 20px;"></div>
+      <div class="fp-controls">
+        <audio controls id="fpAudio" style="width: 100%;"></audio>
+      </div>
+    </div>
+  </div>
+
   <script>
     const SUPABASE_URL = 'https://fgljnqcxjbpunlfwoktb.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnbGpucWN4amJwdW5sZndva3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODUzMzgsImV4cCI6MjEwODI2MTMzOH0.LPeIh77qTlhg8NmP5a6hZOVEDSgQeB57V6l8SMhXoeo';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const $ = (id) => document.getElementById(id);
-    const toastEl = $('toast');
+    const bottomPlayer = $('bottomPlayer');
+    const mainAudio = $('mainAudio');
+    const bpPlayBtn = $('bpPlayBtn');
+    const fullPlayer = $('fullPlayer');
+    const fpAudio = $('fpAudio');
 
-    function showToast(msg) {
-      toastEl.textContent = msg;
-      toastEl.classList.add('show');
-      clearTimeout(toastEl._t);
-      toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 3000);
+    // === ЛОГИКА ПЛЕЕРА ===
+    function setupTrack(track) {
+      $('bpTitle').textContent = track.title;
+      $('bpArtist').textContent = track.artist;
+      $('fpTitle').textContent = track.title;
+      $('fpArtist').textContent = track.artist;
+      
+      // Подставляем обложку или логотип
+      const coverSrc = track.cover_url ? track.cover_url : 'logo.jpg';
+      $('bpCover').src = coverSrc;
+      $('fpCover').innerHTML = `<img src="${coverSrc}" alt="Cover">`;
+
+      $('fpTags').innerHTML = `
+        <span class="tag">${track.genre}</span>
+        <span class="tag">${track.type === 'demo' ? 'демо' : 'релиз'}</span>
+        ${track.vip ? '<span class="tag vip">★ VIP</span>' : ''}
+      `;
+      $('fpCover').className = `fp-cover ${track.vip ? 'vip-cover' : ''}`;
+      mainAudio.src = track.audio_url;
+      fpAudio.src = track.audio_url;
+      bottomPlayer.classList.add('active');
     }
+
+    window.togglePlay = function() {
+      if (mainAudio.paused) {
+        mainAudio.play(); fpAudio.play();
+        localStorage.setItem('sn_is_playing', 'true');
+      } else {
+        mainAudio.pause(); fpAudio.pause();
+        localStorage.setItem('sn_is_playing', 'false');
+      }
+    };
+
+    window.openFullPlayer = function() { fullPlayer.classList.add('show'); };
+    window.closeFullPlayer = function() { fullPlayer.classList.remove('show'); };
+
+    mainAudio.addEventListener('play', () => { bpPlayBtn.textContent = '⏸'; fpAudio.play(); });
+    mainAudio.addEventListener('pause', () => { bpPlayBtn.textContent = '▶'; fpAudio.pause(); });
+    mainAudio.addEventListener('timeupdate', () => {
+      localStorage.setItem('sn_time', mainAudio.currentTime);
+      if(Math.abs(fpAudio.currentTime - mainAudio.currentTime) > 0.5) fpAudio.currentTime = mainAudio.currentTime;
+    });
+    fpAudio.addEventListener('play', () => { mainAudio.play(); });
+    fpAudio.addEventListener('pause', () => { mainAudio.pause(); });
+    fpAudio.addEventListener('timeupdate', () => {
+      if(Math.abs(mainAudio.currentTime - fpAudio.currentTime) > 0.5) mainAudio.currentTime = fpAudio.currentTime;
+    });
+
+    function restorePlayer() {
+      const savedTrack = JSON.parse(localStorage.getItem('sn_current_track'));
+      const savedTime = parseFloat(localStorage.getItem('sn_time')) || 0;
+      const isPlaying = localStorage.getItem('sn_is_playing') === 'true';
+
+      if (savedTrack) {
+        setupTrack(savedTrack);
+        mainAudio.currentTime = savedTime;
+        fpAudio.currentTime = savedTime;
+        if (isPlaying) {
+          mainAudio.play().catch(() => { bpPlayBtn.textContent = '▶'; });
+        }
+      }
+    }
+    restorePlayer();
+
+    // === ЛОГИКА ЗАГРУЗКИ ===
+    function showToast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000); }
 
     $('uploadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const file = $('file').files[0];
-      if (!file) return;
+      const audioFile = $('file').files[0];
+      const coverFile = $('coverFile').files[0];
+      if (!audioFile) return;
 
       const btn = $('submitBtn');
       btn.disabled = true;
-      btn.textContent = 'Загрузка в облако...';
+      btn.textContent = 'Загрузка (1/2)...';
 
       try {
-        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-        const { data: uploadData, error: uploadError } = await supabaseClient.storage
-          .from('audio')
-          .upload(fileName, file);
-
+        // 1. Загружаем аудио
+        const fileName = `${Date.now()}_${audioFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const { error: uploadError } = await supabaseClient.storage.from('audio').upload(fileName, audioFile);
         if (uploadError) throw uploadError;
-
         const { data: urlData } = supabaseClient.storage.from('audio').getPublicUrl(fileName);
 
+        // 2. Загружаем обложку (если выбрана)
+        let coverUrl = null;
+        if (coverFile) {
+          btn.textContent = 'Загрузка (2/2)...';
+          const coverName = `cover_${Date.now()}_${coverFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+          const { error: coverError } = await supabaseClient.storage.from('audio').upload(coverName, coverFile);
+          if (!coverError) {
+            const { data: coverData } = supabaseClient.storage.from('audio').getPublicUrl(coverName);
+            coverUrl = coverData.publicUrl;
+          }
+        }
+
+        // 3. Сохраняем в базу
         const { error: dbError } = await supabaseClient.from('tracks').insert([{
           artist: $('artist').value.trim(),
           title: $('title').value.trim(),
           genre: $('genre').value.trim() || 'без жанра',
           description: $('description').value.trim(),
           type: $('type').value,
-          audio_url: urlData.publicUrl
+          audio_url: urlData.publicUrl,
+          cover_url: coverUrl
         }]);
 
         if (dbError) throw dbError;
 
         $('uploadForm').reset();
         showToast('Трек успешно загружен! ✅');
-        setTimeout(() => { window.location.href = 'index.html'; }, 1500); // Перекидываем на главную через 1.5 сек
+        setTimeout(() => { window.location.href = 'index.html'; }, 1500);
       } catch (error) {
-        console.error(error);
         showToast('Ошибка: ' + error.message);
       } finally {
         btn.disabled = false;
