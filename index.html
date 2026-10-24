@@ -6,10 +6,14 @@
   <title>🎵 SN music — площадка для музыкантов</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* ... (все стили остаются точно такими же, они не меняются) ... */
-    :root { --bg: #0d0f14; --card: #161a22; --card-hover: #1c2130; --text: #e6e9ef; --muted: #8b93a7; --accent: #6c5ce7; --accent-2: #00d4aa; --vip: #f5b301; --danger: #ff5c5c; --radius: 14px; }
+    :root {
+      --bg: #0d0f14; --card: #161a22; --card-hover: #1c2130; --text: #e6e9ef;
+      --muted: #8b93a7; --accent: #6c5ce7; --accent-2: #00d4aa;
+      --vip: #f5b301; --danger: #ff5c5c; --radius: 14px;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; padding-bottom: 140px; overflow-x: hidden; }
+    
     header { padding: 15px 20px; border-bottom: 1px solid #232a38; display: flex; flex-direction: column; gap: 15px; z-index: 10; background: var(--bg); position: sticky; top: 0; }
     .header-top { display: flex; justify-content: space-between; align-items: center; }
     .logo { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; text-decoration: none; color: white; }
@@ -17,39 +21,49 @@
     .logo img { height: 35px; width: auto; border-radius: 6px; }
     .auth-btn { background: transparent; border: 1px solid #2f3748; color: var(--text); padding: 6px 14px; border-radius: 20px; font-size: 13px; text-decoration: none; cursor: pointer; transition: 0.2s; }
     .auth-btn:hover { border-color: var(--accent); }
+    
     .search-bar { position: relative; width: 100%; }
     .search-bar input { width: 100%; background: #161a22; border: 1px solid #2a3142; color: var(--text); padding: 12px 16px 12px 40px; border-radius: 10px; font-size: 15px; outline: none; transition: 0.2s; }
     .search-bar input:focus { border-color: var(--accent); background: #1c2130; }
     .search-bar::before { content: '🔍'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; opacity: 0.5; }
+    
     main { flex: 1; width: 100%; max-width: 960px; margin: 0 auto; padding: 20px; }
+    
     .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
     .controls h2 { font-size: 18px; font-weight: 600; }
     .sort-select { background: var(--card); border: 1px solid #2a3142; color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; }
+
     .card-upload { background: var(--card); border: 1px solid #232a38; border-radius: var(--radius); padding: 20px; margin-bottom: 24px; text-align: center; }
     .btn { background: linear-gradient(90deg, var(--accent), #8a7bff); border: none; color: #fff; padding: 14px 20px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; display: block; text-align: center; text-decoration: none; width: 100%; margin-top: 10px; }
     .btn:hover { opacity: 0.9; }
     .btn-ghost { background: transparent; border: 1px solid #2a3142; color: var(--muted); padding: 6px 12px; font-size: 12px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; }
     .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+    
     .tracks { display: flex; flex-direction: column; gap: 12px; }
     .track { background: var(--card); border: 1px solid #232a38; border-radius: var(--radius); padding: 16px; transition: 0.2s; display: flex; flex-direction: column; gap: 10px; }
     .track:hover { background: var(--card-hover); }
     .track.vip { border-color: var(--vip); box-shadow: 0 0 0 1px rgba(245, 179, 1, 0.25); }
+    
     .track-main { display: flex; align-items: center; gap: 12px; }
     .track-cover { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: #0f131b; flex-shrink: 0; }
     .track-info { flex: 1; overflow: hidden; }
     .track-title { font-weight: 600; font-size: 16px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .track-artist { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
     .track-actions-row { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
     .tags-container { display: flex; flex-wrap: wrap; gap: 6px; }
     .tag { font-size: 11px; padding: 3px 8px; border-radius: 6px; background: #232a38; color: var(--muted); }
     .tag.vip { background: rgba(245, 179, 1, 0.15); color: var(--vip); }
     .tag.pending { background: rgba(245, 179, 1, 0.12); color: #e6b800; }
+
     .action-btns { display: flex; align-items: center; gap: 10px; }
     .like-btn { background: transparent; border: none; font-size: 22px; cursor: pointer; color: #4a5568; transition: 0.2s; }
     .like-btn.liked { color: var(--accent); }
     .play-btn { background: var(--accent); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; flex-shrink: 0; }
+    
     .track-desc { color: #a0a8b8; font-size: 13px; line-height: 1.4; background: #0f131b; padding: 8px 12px; border-radius: 8px; }
     .admin-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid #232a38; }
+
     .bottom-player { position: fixed; bottom: 60px; left: 0; right: 0; background: #161a22; border-top: 1px solid #2a3142; padding: 10px 16px; display: none; align-items: center; gap: 12px; z-index: 999; box-shadow: 0 -4px 12px rgba(0,0,0,0.5); cursor: pointer; }
     .bottom-player.active { display: flex; }
     .bottom-player img { width: 44px; height: 44px; border-radius: 8px; background: #0f131b; object-fit: cover; pointer-events: none; }
@@ -57,10 +71,12 @@
     .bp-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .bp-artist { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .bp-btn { background: var(--accent); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 2; }
+    
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: #0f131b; border-top: 1px solid #232a38; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
     .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); text-decoration: none; font-size: 11px; transition: 0.2s; cursor: pointer; width: 25%; }
     .nav-item.active, .nav-item:hover { color: var(--accent); }
     .nav-item svg { width: 24px; height: 24px; fill: currentColor; }
+
     .full-player { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 1001; display: flex; flex-direction: column; padding: 20px; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
     .full-player.show { transform: translateY(0); }
     .fp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
@@ -72,14 +88,15 @@
     .fp-title { font-size: 24px; font-weight: 700; margin-bottom: 5px; }
     .fp-artist { font-size: 18px; color: var(--muted); margin-bottom: 20px; }
     .fp-controls { width: 100%; margin-top: 20px; }
+
     footer { width: 100%; border-top: 1px solid #232a38; padding: 24px 20px; color: var(--muted); font-size: 13px; display: flex; justify-content: center; align-items: center; text-align: center; }
     .toast { position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1c2130; border: 1px solid var(--accent); color: var(--text); padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 1002; }
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    
     .error-text { color: var(--danger); text-align: center; padding: 20px; font-size: 15px; }
   </style>
 </head>
 <body>
-  <!-- ... (HTML каркас остается без изменений) ... -->
   <header>
     <div class="header-top">
       <a href="index.html" class="logo">
@@ -147,45 +164,77 @@
       <div class="fp-controls"><audio controls id="fpAudio" style="width: 100%;"></audio></div>
     </div>
   </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
     const SUPABASE_URL = 'https://fgljnqcxjbpunlfwoktb.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnbGpucWN4amJwdW5sZndva3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODUzMzgsImV4cCI6MjEwODI2MTMzOH0.LPeIh77qTlhg8NmP5a6hZOVEDSgQeB57V6l8SMhXoeo';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    let isAdmin = false, currentUser = null, currentTracks = [], userLikes = [], searchQuery = '';
+    let supabaseClient;
+    try {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (e) {
+      document.getElementById('tracksList').innerHTML = `<div class="error-text">Ошибка подключения к базе данных</div>`;
+    }
+    
+    let isAdmin = false;
+    let currentUser = null;
+    let currentTracks = [];
+    let userLikes = [];
+    let searchQuery = '';
+    
     const $ = (id) => document.getElementById(id);
     
     function showToast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000); }
     function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    
     window.focusSearch = function() { window.scrollTo({ top: 0, behavior: 'smooth' }); $('searchInput').focus(); };
 
     $('searchInput').addEventListener('input', (e) => { searchQuery = e.target.value.toLowerCase(); renderTracks(); });
 
+    // --- ПЛЕЕР ---
     function setupTrack(track) {
       localStorage.setItem('sn_current_track', JSON.stringify(track));
       $('bpTitle').textContent = track.title; $('bpArtist').textContent = track.artist;
       $('fpTitle').textContent = track.title; $('fpArtist').textContent = track.artist;
+      
       const coverSrc = track.cover_url ? track.cover_url : 'logo.jpg';
       $('bpCover').src = coverSrc; $('fpCover').innerHTML = `<img src="${coverSrc}" alt="Cover">`;
-      $('fpTags').innerHTML = `<span class="tag">${escapeHtml(track.genre)}</span><span class="tag">${track.type === 'demo' ? 'демо' : 'релиз'}</span>${track.vip ? '<span class="tag vip">★ VIP</span>' : ''}`;
+      
+      $('fpTags').innerHTML = `
+        <span class="tag">${escapeHtml(track.genre)}</span>
+        <span class="tag">${track.type === 'demo' ? 'демо' : 'релиз'}</span>
+        ${track.vip ? '<span class="tag vip">★ VIP</span>' : ''}
+      `;
       $('fpCover').className = `fp-cover ${track.vip ? 'vip-cover' : ''}`;
-      $('mainAudio').src = track.audio_url; $('fpAudio').src = track.audio_url;
+      
+      $('mainAudio').src = track.audio_url; 
+      $('fpAudio').src = track.audio_url;
       $('bottomPlayer').classList.add('active');
     }
 
     window.playTrack = function(id) {
       const track = currentTracks.find(t => t.id === id) || JSON.parse(localStorage.getItem('sn_current_track'));
       if(!track) return;
+
       const savedTrack = JSON.parse(localStorage.getItem('sn_current_track'));
-      if (savedTrack && savedTrack.id === track.id) { togglePlay(); return; }
-      setupTrack(track); $('mainAudio').play(); $('fpAudio').play(); localStorage.setItem('sn_is_playing', 'true');
+      if (savedTrack && savedTrack.id === track.id) { 
+        togglePlay(); 
+        return; 
+      }
+      setupTrack(track); 
+      $('mainAudio').play(); 
+      $('fpAudio').play(); 
+      localStorage.setItem('sn_is_playing', 'true');
     };
 
     window.togglePlay = function() {
-      if ($('mainAudio').paused) { $('mainAudio').play(); $('fpAudio').play(); localStorage.setItem('sn_is_playing', 'true'); }
-      else { $('mainAudio').pause(); $('fpAudio').pause(); localStorage.setItem('sn_is_playing', 'false'); }
+      if ($('mainAudio').paused) { 
+        $('mainAudio').play(); $('fpAudio').play(); localStorage.setItem('sn_is_playing', 'true'); 
+      } else { 
+        $('mainAudio').pause(); $('fpAudio').pause(); localStorage.setItem('sn_is_playing', 'false'); 
+      }
     };
 
     window.openFullPlayer = function() { $('fullPlayer').classList.add('show'); };
@@ -197,37 +246,63 @@
       localStorage.setItem('sn_time', $('mainAudio').currentTime);
       if(Math.abs($('fpAudio').currentTime - $('mainAudio').currentTime) > 0.5) $('fpAudio').currentTime = $('mainAudio').currentTime;
     });
+    
     $('fpAudio').addEventListener('play', () => { if($('mainAudio').paused) $('mainAudio').play(); });
     $('fpAudio').addEventListener('pause', () => { if(!$('mainAudio').paused) $('mainAudio').pause(); });
+    $('fpAudio').addEventListener('timeupdate', () => {
+      if(Math.abs($('mainAudio').currentTime - $('fpAudio').currentTime) > 0.5) $('mainAudio').currentTime = $('fpAudio').currentTime;
+    });
 
     function restorePlayer() {
       try {
         const savedTrack = JSON.parse(localStorage.getItem('sn_current_track'));
         const savedTime = parseFloat(localStorage.getItem('sn_time')) || 0;
         if (savedTrack) {
-          setupTrack(savedTrack); $('mainAudio').currentTime = savedTime; $('fpAudio').currentTime = savedTime;
-          if (localStorage.getItem('sn_is_playing') === 'true') { $('mainAudio').play().catch(() => { $('bpPlayBtn').textContent = '▶'; }); }
+          setupTrack(savedTrack); 
+          $('mainAudio').currentTime = savedTime; 
+          $('fpAudio').currentTime = savedTime;
+          if (localStorage.getItem('sn_is_playing') === 'true') { 
+            $('mainAudio').play().catch(() => { $('bpPlayBtn').textContent = '▶'; }); 
+          }
         }
       } catch(e) {}
     }
 
+    // --- ЛАЙКИ ---
     async function toggleLike(trackId) {
       if (!currentUser) { window.location.href = 'auth.html'; return; }
+      
       const isLiked = userLikes.includes(trackId);
       const btn = $(`like-btn-${trackId}`);
+      
       if (isLiked) {
         await supabaseClient.from('likes').delete().match({ user_id: currentUser.id, track_id: trackId });
-        userLikes = userLikes.filter(id => id !== trackId); if(btn) btn.classList.remove('liked');
+        userLikes = userLikes.filter(id => id !== trackId); 
+        if(btn) btn.classList.remove('liked');
       } else {
         await supabaseClient.from('likes').insert({ user_id: currentUser.id, track_id: trackId });
-        userLikes.push(trackId); if(btn) btn.classList.add('liked');
+        userLikes.push(trackId); 
+        if(btn) btn.classList.add('liked');
       }
     }
 
+    // --- ОТРИСОВКА ---
     function renderTracks() {
       let filtered = [...currentTracks];
-      if (searchQuery) filtered = filtered.filter(t => t.title.toLowerCase().includes(searchQuery) || t.artist.toLowerCase().includes(searchQuery) || (t.genre && t.genre.toLowerCase().includes(searchQuery)));
-      if (!filtered.length) { $('tracksList').innerHTML = '<div style="text-align: center; color: var(--muted); padding: 20px;">Ничего не найдено</div>'; return; }
+      
+      if (searchQuery) {
+        filtered = filtered.filter(t => 
+          t.title.toLowerCase().includes(searchQuery) || 
+          t.artist.toLowerCase().includes(searchQuery) || 
+          (t.genre && t.genre.toLowerCase().includes(searchQuery))
+        );
+      }
+
+      if (!filtered.length) { 
+        $('tracksList').innerHTML = '<div style="text-align: center; color: var(--muted); padding: 20px;">Ничего не найдено</div>'; 
+        return; 
+      }
+
       const sortBy = $('sortSelect').value;
       filtered.sort((a, b) => (b.vip ? 1 : 0) - (a.vip ? 1 : 0));
       filtered.sort((a, b) => {
@@ -235,6 +310,7 @@
         const dateA = new Date(a.created_at).getTime(), dateB = new Date(b.created_at).getTime();
         return sortBy === 'old' ? dateA - dateB : dateB - dateA;
       });
+
       $('tracksList').innerHTML = filtered.map(t => {
         const coverSrc = t.cover_url ? t.cover_url : 'logo.jpg';
         const isLiked = userLikes.includes(t.id);
@@ -242,24 +318,18 @@
         <div class="track ${t.vip ? 'vip' : ''}">
           <div class="track-main">
             <img src="${coverSrc}" class="track-cover" alt="Cover">
-            <div class="track-info"><div class="track-title">${escapeHtml(t.title)}</div><div class="track-artist">${escapeHtml(t.artist)}</div></div>
+            <div class="track-info">
+              <div class="track-title">${escapeHtml(t.title)}</div>
+              <div class="track-artist">${escapeHtml(t.artist)}</div>
+            </div>
             <button class="play-btn" onclick='playTrack("${t.id}")'>▶</button>
           </div>
           <div class="track-actions-row">
             <div class="tags-container">
-              <span class="tag">${escapeHtml(t.genre)}</span><span class="tag">${t.type === 'demo' ? 'демо' : 'релиз'}</span>
-              ${t.vip ? '<span class="tag vip">★ VIP</span>' : ''}${isAdmin && t.status === 'pending' ? '<span class="tag pending">на модерации</span>' : ''}
+              <span class="tag">${escapeHtml(t.genre)}</span>
+              <span class="tag">${t.type === 'demo' ? 'демо' : 'релиз'}</span>
+              ${t.vip ? '<span class="tag vip">★ VIP</span>' : ''}
+              ${isAdmin && t.status === 'pending' ? '<span class="tag pending">на модерации</span>' : ''}
             </div>
-            <div class="action-btns"><button class="like-btn ${isLiked ? 'liked' : ''}" id="like-btn-${t.id}" onclick="toggleLike('${t.id}')">♥</button></div>
-          </div>
-          ${t.description ? `<div class="track-desc">${escapeHtml(t.description)}</div>` : ''}
-          ${isAdmin ? `<div class="admin-actions">
-              ${t.status !== 'approved' ? `<button class="btn-ghost" onclick="moderate('${t.id}','approved')">Одобрить</button>` : ''}
-              ${t.status !== 'rejected' ? `<button class="btn-ghost" onclick="moderate('${t.id}','rejected')">Отклонить</button>` : ''}
-              <button class="btn-ghost" onclick="toggleVip('${t.id}', ${t.vip})">${t.vip ? 'Снять VIP' : 'Сделать VIP'}</button>
-              <button class="btn-ghost" style="color:var(--danger)" onclick="removeTrack('${t.id}')">Удалить</button>
-          </div>` : ''}
-        </div>`}).join('');
-    }
-
-    // НАД
+            <div class="action-btns">
+              <button class="like-btn ${isLike
