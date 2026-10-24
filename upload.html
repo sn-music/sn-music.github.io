@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Загрузка трека — SN music</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b; --surface: #18181b; --surface-hover: #27272a;
+      --text: #f4f4f5; --muted: #a1a1aa; --accent: #8b5cf6; --accent-hover: #7c3aed;
+      --radius: 16px; --danger: #ef4444;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 100px; }
+
+    /* Шапка */
+    header { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .logo img { height: 36px; width: 36px; border-radius: 10px; object-fit: cover; }
+    .logo-text { font-size: 20px; font-weight: 800; background: linear-gradient(90deg, #a78bfa, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .btn-back { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 8px 16px; border-radius: 100px; font-size: 14px; font-weight: 500; text-decoration: none; transition: 0.2s; }
+    .btn-back:hover { background: rgba(255,255,255,0.05); }
+
+    main { flex: 1; width: 100%; max-width: 600px; margin: 0 auto; padding: 32px 20px; }
+    
+    .form-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    h2 { font-size: 24px; font-weight: 800; margin-bottom: 24px; text-align: center; }
+
+    .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+    
+    label { font-size: 13px; color: var(--muted); font-weight: 500; margin-left: 4px; }
+    input[type="text"], textarea, select { width: 100%; background: var(--bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 16px; color: var(--text); font-size: 15px; outline: none; transition: 0.3s; font-family: 'Inter', sans-serif; }
+    input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15); }
+    textarea { resize: vertical; min-height: 80px; }
+    
+    /* Красивые инпуты для файлов */
+    .file-upload { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); border: 2px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 24px; cursor: pointer; transition: 0.3s; text-align: center; }
+    .file-upload:hover { border-color: var(--accent); background: rgba(139, 92, 246, 0.05); }
+    .file-upload input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    .file-upload svg { width: 32px; height: 32px; fill: var(--muted); margin-bottom: 8px; transition: 0.3s; }
+    .file-upload:hover svg { fill: var(--accent); }
+    .file-upload span { font-size: 14px; color: var(--muted); font-weight: 500; }
+    .file-upload.has-file { border-color: var(--accent); border-style: solid; background: rgba(139, 92, 246, 0.1); }
+
+    .btn { background: var(--accent); color: #fff; border: none; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.3s; }
+    .btn:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px; margin-top: auto; }
+    
+    /* Мини-плеер (чтобы музыка не останавливалась) */
+    .bottom-player { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); padding: 10px 16px; display: none; align-items: center; gap: 16px; z-index: 1000; }
+    .bottom-player.active { display: flex; }
+    .bp-cover { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; }
+    .bp-info { flex: 1; min-width: 0; }
+    .bp-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bp-artist { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bp-btn { width: 40px; height: 40px; border-radius: 50%; background: #fff; color: #000; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .bp-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+    .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--accent); color: white; padding: 12px 24px; border-radius: 100px; font-weight: 600; font-size: 14px; opacity: 0; transition: 0.3s; z-index: 3000; box-shadow: 0 10px 20px rgba(139,92,246,0.3); }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .error-toast { background: var(--danger); box-shadow: 0 10px 20px rgba(239,68,68,0.3); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="logo">
+      <img src="logo.jpg" alt="SN">
+      <span class="logo-text">SN music</span>
+    </a>
+    <a href="index.html" class="btn-back">← На главную</a>
+  </header>
+
+  <main>
+    <div class="form-card">
+      <h2>Загрузить трек</h2>
+      
+      <form id="uploadForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Имя артиста</label>
+            <input type="text" id="artist" placeholder="Как вас зовут?" required>
+          </div>
+          <div class="form-group">
+            <label>Название трека</label>
+            <input type="text" id="title" placeholder="Как называется трек?" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Жанр</label>
+            <input type="text" id="genre" placeholder="Например: Phonk">
+          </div>
+          <div class="form-group">
+            <label>Тип</label>
+            <select id="type">
+              <option value="release">Готовый релиз</option>
+              <option value="demo">Демо / черновик</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Описание (необязательно)</label>
+          <textarea id="description" placeholder="Расскажите о треке..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Аудиофайл (MP3)</label>
+          <div class="file-upload" id="audio-upload-box">
+            <input type="file" id="file" accept="audio/*" required onchange="updateFileLabel(this, 'audio-upload-box')">
+            <svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+            <span id="audio-label">Нажмите, чтобы выбрать MP3</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Обложка (картинка, необязательно)</label>
+          <div class="file-upload" id="cover-upload-box">
+            <input type="file" id="coverFile" accept="image/*" onchange="updateFileLabel(this, 'cover-upload-box')">
+            <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            <span id="cover-label">Выберите обложку</span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn">Отправить на модерацию</button>
+      </form>
+    </div>
+  </main>
+
+  <footer>made by PlayTools</footer>
+
+  <!-- МИНИ-ПЛЕЕР -->
+  <div class="bottom-player" id="bottomPlayer">
+    <img src="logo.jpg" class="bp-cover" id="bpCover">
+    <div class="bp-info">
+      <div class="bp-title" id="bpTitle">Название</div>
+      <div class="bp-artist" id="bpArtist">Артист</div>
+    </div>
+    <button class="bp-btn" id="bpPlayBtn" onclick="togglePlay()">
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const SUPABASE_URL = 'https://fgljnqcxjbpunlfwoktb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnbGpucWN4amJwdW5sZndva3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODUzMzgsImV4cCI6MjEwODI2MTMzOH0.LPeIh77qTlhg8NmP5a6hZOVEDSgQeB57V6l8SMhXoeo';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const $ = (id) => document.getElementById(id);
+    
+    function showToast(msg, isError = false) { 
+      const t = $('toast'); 
+      t.textContent = msg; 
+      t.className = 'toast show' + (isError ? ' error-toast' : '');
+      setTimeout(() => t.classList.remove('show'), 3000); 
+    }
+
+    function updateFileLabel(input, boxId) {
+      const box = $(boxId);
+      const label = box.querySelector('span');
+      if (input.files && input.files.length > 0) {
+        label.textContent = input.files[0].name;
+        box.classList.add('has-file');
+      } else {
+        label.textContent = boxId === 'audio-upload-box' ? 'Нажмите, чтобы выбрать MP3' : 'Выберите обложку';
+        box.classList.remove('has-file');
+      }
+    }
+
+    // --- ПЛЕЕР ---
+    let audio = new Audio();
+    function restorePlayer() {
+      try {
+        const savedTrack = JSON.parse(localStorage.getItem('sn_current_track'));
+        if (savedTrack) {
+          $('bpTitle').textContent = savedTrack.title;
+          $('bpArtist').textContent = savedTrack.artist;
+          if(savedTrack.cover_url) $('bpCover').src = savedTrack.cover_url;
+          audio.src = savedTrack.audio_url;
+          $('bottomPlayer').classList.add('active');
+          
+          if (localStorage.getItem('sn_is_playing') === 'true') {
+            audio.play().catch(()=>{});
+          }
+        }
+      } catch(e) {}
+    }
+
+    window.togglePlay = function() {
+      if (audio.paused) { audio.play(); localStorage.setItem('sn_is_playing', 'true'); } 
+      else { audio.pause(); localStorage.setItem('sn_is_playing', 'false'); }
+    };
+
+    audio.addEventListener('play', () => { $('bpPlayBtn').innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'; });
+    audio.addEventListener('pause', () => { $('bpPlayBtn').innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; });
+
+    // --- ЗАГРУЗКА ТРЕКА ---
+    $('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const audioFile = $('file').files[0];
+      const coverFile = $('coverFile').files[0];
+      if (!audioFile) return;
+
+      const btn = $('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Загрузка (1/2)...';
+
+      try {
+        // 1. Загружаем аудио
+        const fileName = `${Date.now()}_${audioFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const { error: uploadError } = await supabaseClient.storage.from('audio').upload(fileName, audioFile);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabaseClient.storage.from('audio').getPublicUrl(fileName);
+
+        // 2. Загружаем обложку
+        let coverUrl = null;
+        if (coverFile) {
+          btn.textContent = 'Загрузка (2/2)...';
+          const coverName = `cover_${Date.now()}_${coverFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+          const { error: coverError } = await supabaseClient.storage.from('audio').upload(coverName, coverFile);
+          if (!coverError) {
+            const { data: coverData } = supabaseClient.storage.from('audio').getPublicUrl(coverName);
+            coverUrl = coverData.publicUrl;
+          }
+        }
+
+        // 3. Сохраняем в базу
+        const { error: dbError } = await supabaseClient.from('tracks').insert([{
+          artist: $('artist').value.trim(),
+          title: $('title').value.trim(),
+          genre: $('genre').value.trim() || 'без жанра',
+          description: $('description').value.trim(),
+          type: $('type').value,
+          audio_url: urlData.publicUrl,
+          cover_url: coverUrl
+        }]);
+
+        if (dbError) throw dbError;
+
+        showToast('Трек успешно загружен! 🎉');
+        setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+      } catch (error) {
+        showToast('Ошибка: ' + error.message, true);
+        btn.disabled = false;
+        btn.textContent = 'Отправить на модерацию';
+      }
+    });
+
+    restorePlayer();
+  </script>
+</body>
+</html>
