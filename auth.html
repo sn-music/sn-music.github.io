@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Профиль — SN music</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #09090b; --surface: #18181b; --text: #f4f4f5; --muted: #a1a1aa; --accent: #8b5cf6; --accent-hover: #7c3aed; --radius: 16px; --danger: #ef4444; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    .auth-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); padding: 32px 24px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    
+    /* Логотип */
+    .logo { text-align: center; margin-bottom: 24px; }
+    .logo img { height: 60px; border-radius: 12px; }
+    .logo-text { display: block; font-size: 24px; font-weight: 800; margin-top: 12px; background: linear-gradient(90deg, #a78bfa, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    h2 { text-align: center; margin-bottom: 24px; font-size: 20px; font-weight: 600; }
+    
+    /* Стили для формы */
+    input { width: 100%; background: var(--bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 16px; color: var(--text); font-size: 15px; outline: none; margin-bottom: 12px; transition: 0.3s; }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15); }
+    .btn { width: 100%; background: var(--accent); color: white; border: none; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; margin-top: 8px; text-decoration: none; display: block; text-align: center; }
+    .btn:hover { background: var(--accent-hover); transform: translateY(-2px); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .switch { text-align: center; margin-top: 20px; font-size: 14px; color: var(--muted); }
+    .switch a { color: var(--accent); cursor: pointer; text-decoration: none; font-weight: 600; }
+    .back { text-align: center; margin-top: 15px; font-size: 13px; }
+    .back a { color: var(--muted); text-decoration: none; }
+    .error-msg { color: var(--danger); font-size: 13px; text-align: center; margin-bottom: 12px; display: none; }
+
+    /* Стили для профиля */
+    .profile-view { display: none; text-align: center; }
+    .profile-avatar-big { width: 80px; height: 80px; border-radius: 50%; background: var(--accent); color: white; font-size: 32px; font-weight: bold; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; box-shadow: 0 10px 20px rgba(139,92,246,0.3); }
+    .profile-email { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 8px; }
+    .profile-role { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+    
+    /* Кнопка карточки артиста */
+    .btn-artist-page { background: transparent; border: 1px solid var(--accent); color: var(--accent); margin-bottom: 12px; }
+    .btn-artist-page:hover { background: rgba(139, 92, 246, 0.1); }
+    
+    .btn-logout { width: 100%; background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+    .btn-logout:hover { background: rgba(239, 68, 68, 0.1); }
+  </style>
+</head>
+<body>
+  <div class="auth-card">
+    <div class="logo">
+      <img src="logo.jpg" alt="SN">
+      <span class="logo-text">SN music</span>
+    </div>
+
+    <!-- БЛОК ВХОДА (показывается если не авторизован) -->
+    <div id="auth-view">
+      <h2 id="formTitle">Вход в аккаунт</h2>
+      <div class="error-msg" id="errorMsg"></div>
+      <form id="authForm">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Пароль (мин. 6 символов)" required>
+        <button type="submit" class="btn" id="submitBtn">Войти</button>
+      </form>
+      <div class="switch" id="switchText">Нет аккаунта? <a onclick="toggleMode()">Зарегистрироваться</a></div>
+    </div>
+
+    <!-- БЛОК ПРОФИЛЯ (показывается если авторизован) -->
+    <div id="profile-view" class="profile-view">
+      <div class="profile-avatar-big" id="profileAvatarBig">U</div>
+      <div class="profile-email" id="profileEmail">email@example.com</div>
+      <div class="profile-role" id="profileRole">Слушатель / Артист</div>
+      
+      <!-- Кнопка перехода на страницу артиста -->
+      <a href="#" id="myArtistPageBtn" class="btn btn-artist-page">Моя страница артиста</a>
+      
+      <button class="btn-logout" onclick="handleLogout()">Выйти из аккаунта</button>
+    </div>
+
+    <div class="back" style="margin-top: 20px;"><a href="index.html">← Вернуться на главную</a></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCWlkDjzylbhDMl1bN33fn-sQx3BFTIfMc",
+      authDomain: "sn-music-d3c6c.firebaseapp.com",
+      projectId: "sn-music-d3c6c",
+      storageBucket: "sn-music-d3c6c.firebasestorage.app",
+      messagingSenderId: "308834788211",
+      appId: "1:308834788211:web:367f727c45a812b8835b06",
+      measurementId: "G-CRM9JQLBM8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    let isLoginMode = true;
+
+    // Проверка состояния авторизации при загрузке страницы
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Пользователь вошел -> показываем профиль
+        document.getElementById('auth-view').style.display = 'none';
+        document.getElementById('profile-view').style.display = 'block';
+        
+        const email = user.email;
+        const namePart = email.split('@')[0]; // Получаем ник из почты
+        
+        document.getElementById('profileAvatarBig').textContent = namePart[0].toUpperCase();
+        document.getElementById('profileEmail').textContent = email;
+        
+        // Настраиваем ссылку на карточку артиста
+        document.getElementById('myArtistPageBtn').href = `artist.html?name=${encodeURIComponent(namePart)}`;
+        
+        if (email === 'nur41games@gmail.com') {
+          document.getElementById('profileRole').textContent = 'Администратор';
+          document.getElementById('profileRole').style.color = 'var(--accent)';
+        } else {
+          document.getElementById('profileRole').textContent = 'Слушатель / Артист';
+        }
+      } else {
+        // Пользователь не вошел -> показываем форму входа
+        document.getElementById('auth-view').style.display = 'block';
+        document.getElementById('profile-view').style.display = 'none';
+      }
+    });
+
+    window.handleLogout = async function() {
+      await signOut(auth);
+      window.location.reload(); 
+    };
+
+    window.toggleMode = function() {
+      isLoginMode = !isLoginMode;
+      document.getElementById('formTitle').innerText = isLoginMode ? 'Вход в аккаунт' : 'Регистрация';
+      document.getElementById('submitBtn').innerText = isLoginMode ? 'Войти' : 'Создать аккаунт';
+      document.getElementById('switchText').innerHTML = isLoginMode ? 'Нет аккаунта? <a onclick="toggleMode()">Зарегистрироваться</a>' : 'Уже есть аккаунт? <a onclick="toggleMode()">Войти</a>';
+      document.getElementById('errorMsg').style.display = 'none';
+    };
+
+    document.getElementById('authForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('submitBtn');
+      const err = document.getElementById('errorMsg');
+      
+      btn.disabled = true;
+      btn.innerText = 'Загрузка...';
+      err.style.display = 'none';
+
+      try {
+        if (isLoginMode) {
+          await signInWithEmailAndPassword(auth, email, password);
+        } else {
+          await createUserWithEmailAndPassword(auth, email, password);
+        }
+      } catch (error) {
+        err.innerText = error.message.replace('Firebase: ', '');
+        err.style.display = 'block';
+        btn.disabled = false;
+        btn.innerText = isLoginMode ? 'Войти' : 'Создать аккаунт';
+      }
+    });
+  </script>
+</body>
+</html>
