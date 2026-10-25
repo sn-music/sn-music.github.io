@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Профиль артиста — SN music</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b; --surface: #18181b; --surface-hover: #27272a;
+      --text: #f4f4f5; --muted: #a1a1aa; --accent: #8b5cf6; --accent-hover: #7c3aed;
+      --vip: #fbbf24; --danger: #ef4444; --radius: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 160px; overflow-x: hidden; }
+
+    /* Шапка сайта */
+    header { position: sticky; top: 0; z-index: 100; background: rgba(9, 9, 11, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .logo img { height: 36px; width: 36px; border-radius: 10px; object-fit: cover; }
+    .logo-text { font-size: 20px; font-weight: 800; background: linear-gradient(90deg, #a78bfa, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .btn-back { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 8px 16px; border-radius: 100px; font-size: 14px; font-weight: 500; text-decoration: none; }
+
+    main { flex: 1; width: 100%; max-width: 800px; margin: 0 auto; padding: 0 20px 24px 20px; }
+
+    /* Баннер и профиль артиста */
+    .artist-hero { position: relative; border-radius: var(--radius); overflow: hidden; margin-bottom: 24px; margin-top: 20px; background: var(--surface); border: 1px solid rgba(255,255,255,0.05); }
+    .hero-banner { height: 140px; background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(9,9,11,1)); }
+    .hero-content { padding: 0 24px 24px 24px; display: flex; flex-direction: column; align-items: center; margin-top: -50px; }
+    .artist-avatar { width: 100px; height: 100px; border-radius: 50%; background: var(--accent); color: white; font-size: 40px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.6); border: 4px solid var(--bg); margin-bottom: 12px; }
+    .artist-name { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; text-align: center; }
+    .artist-bio { font-size: 14px; color: var(--muted); text-align: center; max-width: 500px; margin-bottom: 16px; line-height: 1.5; }
+    
+    /* Статистика артиста */
+    .artist-stats { display: flex; gap: 24px; justify-content: center; margin-top: 8px; }
+    .stat-item { display: flex; flex-direction: column; align-items: center; }
+    .stat-val { font-size: 20px; font-weight: 800; color: var(--accent); }
+    .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; }
+
+    /* Список треков */
+    .section-title { font-size: 20px; font-weight: 700; margin-bottom: 16px; margin-top: 32px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
+    .tracks { display: flex; flex-direction: column; gap: 12px; }
+    .track { background: var(--surface); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); padding: 12px; display: flex; align-items: center; gap: 16px; transition: 0.2s; }
+    .track:hover { background: var(--surface-hover); }
+    .track.vip { border-color: rgba(251, 191, 36, 0.3); background: linear-gradient(90deg, rgba(251, 191, 36, 0.05), transparent); }
+    .track-cover { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; background: #000; flex-shrink: 0; }
+    .track-info { flex: 1; min-width: 0; }
+    .track-title { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white; text-decoration: none; display: block; }
+    .track-meta { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .tag { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 100px; background: rgba(255,255,255,0.1); color: var(--muted); }
+    .tag.plays { background: transparent; color: var(--accent); padding: 0 4px; }
+    .play-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+    .play-btn svg { width: 18px; height: 18px; fill: currentColor; margin-left: 2px; }
+
+    /* Плеер (копия с главной) */
+    .bottom-player { position: fixed; bottom: 70px; left: 12px; right: 12px; background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 10px 14px; display: none; align-items: center; gap: 12px; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.6); cursor: pointer; }
+    .bottom-player.active { display: flex; }
+    .bp-cover { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; }
+    .bp-info { flex: 1; min-width: 0; }
+    .bp-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bp-artist { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bp-controls { display: flex; align-items: center; gap: 10px; z-index: 2; }
+    .bp-btn { width: 36px; height: 36px; border-radius: 50%; background: transparent; color: var(--text); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .bp-btn svg { width: 20px; height: 20px; fill: currentColor; }
+    .bp-btn.play-pause { background: #fff; color: #000; width: 44px; height: 44px; }
+    .bp-btn.play-pause svg { width: 24px; height: 24px; }
+
+    /* Навигация */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: rgba(15, 19, 27, 0.95); backdrop-filter: blur(10px); border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-around; align-items: center; z-index: 1001; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); text-decoration: none; font-size: 10px; font-weight: 500; cursor: pointer; width: 25%; }
+    .nav-item:hover { color: var(--accent); }
+    .nav-item svg { width: 22px; height: 22px; fill: currentColor; }
+
+    /* ПОЛНОЭКРАННЫЙ ПЛЕЕР */
+    .full-player { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; padding: 24px; transform: translateY(100%); transition: transform 0.4s; height: 100dvh; }
+    .full-player.show { transform: translateY(0); }
+    .fp-header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; margin-bottom: 20px; }
+    .fp-close { background: rgba(255,255,255,0.1); border: none; width: 40px; height: 40px; border-radius: 50%; color: var(--text); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .fp-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; max-width: 500px; margin: 0 auto; min-height: 0; }
+    .fp-cover { width: 100%; max-width: 320px; max-height: 40vh; aspect-ratio: 1/1; border-radius: 20px; object-fit: cover; box-shadow: 0 20px 40px rgba(0,0,0,0.6); margin-bottom: 24px; background: var(--surface); }
+    .fp-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
+    .fp-artist { font-size: 16px; color: var(--muted); margin-bottom: 20px; font-weight: 500; }
+    .fp-tags { display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
+    
+    /* КАСТОМНЫЙ ПЛЕЕР (Прогресс-бар) */
+    .fp-controls { width: 100%; flex-shrink: 0; padding-bottom: 10px; display: flex; flex-direction: column; gap: 16px; }
+    .custom-progress-container { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+    
+    .custom-progress { 
+      width: 100%; 
+      -webkit-appearance: none; 
+      appearance: none; 
+      height: 4px; 
+      border-radius: 2px; 
+      outline: none; 
+      cursor: pointer;
+      background: rgba(255,255,255,0.15); 
+    }
+    .custom-progress::-webkit-slider-thumb { 
+      -webkit-appearance: none; 
+      appearance: none; 
+      width: 14px; 
+      height: 14px; 
+      border-radius: 50%; 
+      background: #fff; 
+      box-shadow: 0 0 10px rgba(139,92,246,0.8); 
+      cursor: pointer; 
+    }
+    
+    .time-display { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 500; }
+    
+    .fp-buttons { display: flex; align-items: center; justify-content: center; gap: 24px; margin-top: 10px; }
+    .fp-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .fp-btn svg { width: 28px; height: 28px; fill: currentColor; }
+    .fp-btn:hover { color: var(--text); }
+    .fp-btn.active { color: var(--accent); }
+    .fp-btn.play-pause { width: 64px; height: 64px; background: #fff; color: #000; border-radius: 50%; }
+    .fp-btn.play-pause svg { width: 32px; height: 32px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="logo">
+      <img src="logo.jpg" alt="SN">
+      <span class="logo-text">SN music</span>
+    </a>
+    <a href="index.html" class="btn-back">← На главную</a>
+  </header>
+
+  <main>
+    <!-- Карточка артиста -->
+    <div class="artist-hero">
+      <div class="hero-banner"></div>
+      <div class="hero-content">
+        <div class="artist-avatar" id="artistAvatar">A</div>
+        <div class="artist-name" id="artistNameDisplay">Имя Артиста</div>
+        <div class="artist-bio" id="artistBio">Этот артист пока не добавил описание.</div>
+        
+        <div class="artist-stats">
+          <div class="stat-item">
+            <span class="stat-val" id="statTracks">0</span>
+            <span class="stat-label">Треков</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val" id="statPlays">0</span>
+            <span class="stat-label">Прослушиваний</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Треки артиста</h2>
+    <div class="tracks" id="artistTracksList">
+      <div style="text-align: center; color: var(--muted); padding: 20px;">Загрузка...</div>
+    </div>
+  </main>
+
+  <!-- Плеер и навигация -->
+  <div class="bottom-player" id="bottomPlayer" onclick="openFullPlayer()">
+    <img src="logo.jpg" class="bp-cover" id="bpCover">
+    <div class="bp-info">
+      <div class="bp-title" id="bpTitle">Название</div>
+      <div class="bp-artist" id="bpArtist">Артист</div>
+    </div>
+    <div class="bp-controls">
+      <button class="bp-btn" onclick="event.stopPropagation(); playPrev()"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+      <button class="bp-btn play-pause" id="bpPlayBtn" onclick="event.stopPropagation(); togglePlay()"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+      <button class="bp-btn" onclick="event.stopPropagation(); playNext()"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Главная</span>
+    </a>
+    <a href="index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><span>Поиск</span>
+    </a>
+    <a href="upload.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg><span>Загрузить</span>
+    </a>
+    <a href="auth.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Профиль</span>
+    </a>
+  </nav>
+
+  <!-- ПОЛНОЭКРАННЫЙ ПЛЕЕР С КАСТОМНЫМ ПРОГРЕСС-БАРОМ -->
+  <div class="full-player" id="fullPlayer">
+    <div class="fp-header">
+      <button class="fp-close" onclick="closeFullPlayer()">⌄</button>
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--muted);">СЕЙЧАС ИГРАЕТ</div>
+      <div style="width: 40px;"></div>
+    </div>
+    <div class="fp-content">
+      <img src="logo.jpg" class="fp-cover" id="fpCover">
+      <div class="fp-title" id="fpTitle">Название</div>
+      <div class="fp-artist" id="fpArtist">Артист</div>
+      <div class="fp-tags" id="fpTags"></div>
+    </div>
+    <div class="fp-controls">
+      
+      <!-- Наш кастомный плеер -->
+      <div class="custom-progress-container">
+        <input type="range" class="custom-progress" id="progressBar" value="0" min="0" max="100" step="0.1">
+        <div class="time-display">
+          <span id="currentTime">0:00</span>
+          <span id="totalTime">0:00</span>
+        </div>
+      </div>
+      
+      <!-- Скрытый аудио-элемент -->
+      <audio id="mainAudio"></audio>
+
+      <div class="fp-buttons">
+        <button class="fp-btn" id="btnShuffle" onclick="toggleShuffle()"><svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>
+        <button class="fp-btn" onclick="playPrev()"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+        <button class="fp-btn play-pause" id="fpPlayBtn" onclick="togglePlay()"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+        <button class="fp-btn" onclick="playNext()"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+        <button class="fp-btn" id="btnRepeat" onclick="toggleRepeat()"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://fgljnqcxjbpunlfwoktb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnbGpucWN4amJwdW5sZndva3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODUzMzgsImV4cCI6MjEwODI2MTMzOH0.LPeIh77qTlhg8NmP5a6hZOVEDSgQeB57V6l8SMhXoeo';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    const $ = (id) => document.getElementById(id);
+    const audio = $('mainAudio');
+    let currentTracks = [];
+    let playQueue = [];
+    let currentIndex = -1;
+    let isShuffle = false;
+    let repeatMode = 0;
+
+    // 1. Получаем имя артиста из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const artistName = urlParams.get('name');
+
+    if (!artistName) window.location.href = 'index.html'; 
+
+    // 2. Логика плеера
+    function formatTime(seconds) {
+      if (isNaN(seconds) || seconds === Infinity) return "0:00";
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    // Закрашивание прогресс-бара
+    audio.addEventListener('timeupdate', () => {
+      if (!audio.duration) return;
+      
+      const percent = (audio.currentTime / audio.duration) * 100;
+      
+      $('progressBar').value = audio.currentTime;
+      $('currentTime').textContent = formatTime(audio.currentTime);
+      
+      // Магия CSS: закрашиваем часть дорожки до текущего времени белым
+      $('progressBar').style.background = `linear-gradient(to right, #fff ${percent}%, rgba(255,255,255,0.15) ${percent}%)`;
+    });
+
+    audio.addEventListener('loadedmetadata', () => {
+      $('progressBar').max = audio.duration;
+      $('progressBar').style.background = `linear-gradient(to right, #fff 0%, rgba(255,255,255,0.15) 0%)`;
+      $('totalTime').textContent = formatTime(audio.duration);
+    });
+
+    // Если пользователь тянет ползунок
+    $('progressBar').addEventListener('input', (e) => {
+      const time = parseFloat(e.target.value);
+      const percent = (time / audio.duration) * 100;
+      
+      audio.currentTime = time;
+      $('currentTime').textContent = formatTime(time);
+      
+      // Закрашиваем при перетаскивании
+      e.target.style.background = `linear-gradient(to right, #fff ${percent}%, rgba(255,255,255,0.15) ${percent}%)`;
+    });
+
+    function setupTrack(track) {
+      localStorage.setItem('sn_current_track', JSON.stringify(track));
+      $('bpTitle').textContent = track.title;
+      $('bpArtist').textContent = track.artist;
+      $('fpTitle').textContent = track.title;
+      $('fpArtist').textContent = track.artist;
+      
+      const coverSrc = track.cover_url ? track.cover_url : 'logo.jpg';
+      $('bpCover').src = coverSrc; $('fpCover').src = coverSrc;
+      
+      $('fpTags').innerHTML = `
+        <span class="tag">${track.genre}</span>
+        <span class="tag">${track.type === 'demo' ? 'демо' : 'релиз'}</span>
+        ${track.vip ? '<span class="tag vip">★ VIP</span>' : ''}
+      `;
+      audio.src = track.audio_url; 
+      $('bottomPlayer').classList.add('active');
+    }
+
+    window.playTrack = function(id) {
+      playQueue = currentTracks; // Очередь - это треки этого артиста
+      currentIndex = playQueue.findIndex(t => t.id === id);
+      if (currentIndex !== -1) {
+        setupTrack(playQueue[currentIndex]);
+        audio.play(); localStorage.setItem('sn_is_playing', 'true');
+      }
+    };
+
+    window.togglePlay = function() {
+      if (audio.paused) { audio.play(); localStorage.setItem('sn_is_playing', 'true'); } 
+      else { audio.pause(); localStorage.setItem('sn_is_playing', 'false'); }
+    };
+
+    window.playNext = function() {
+      if (playQueue.length === 0) return;
+      if (isShuffle) {
+        let nextIdx; do { nextIdx = Math.floor(Math.random() * playQueue.length); } while (playQueue.length > 1 && nextIdx === currentIndex);
+        currentIndex = nextIdx;
+      } else {
+        currentIndex++;
+        if (currentIndex >= playQueue.length) {
+          if (repeatMode === 1 || repeatMode === 2) currentIndex = 0;
+          else { currentIndex = playQueue.length - 1; audio.pause(); return; }
+        }
+      }
+      setupTrack(playQueue[currentIndex]); audio.play(); localStorage.setItem('sn_is_playing', 'true');
+    };
+
+    window.playPrev = function() {
+      if (playQueue.length === 0) return;
+      if (isShuffle) {
+        let prevIdx; do { prevIdx = Math.floor(Math.random() * playQueue.length); } while (playQueue.length > 1 && prevIdx === currentIndex);
+        currentIndex = prevIdx;
+      } else {
+        currentIndex--;
+        if (currentIndex < 0) {
+          if (repeatMode === 1 || repeatMode === 2) currentIndex = playQueue.length - 1;
+          else currentIndex = 0;
+        }
+      }
+      setupTrack(playQueue[currentIndex]); audio.play(); localStorage.setItem('sn_is_playing', 'true');
+    };
+
+    window.toggleShuffle = function() { isShuffle = !isShuffle; $('btnShuffle').classList.toggle('active', isShuffle); };
+    window.toggleRepeat = function() {
+      repeatMode = (repeatMode + 1) % 3;
+      const btn = $('btnRepeat');
+      if (repeatMode === 0) { btn.classList.remove('active'); }
+      else { btn.classList.add('active'); }
+    };
+
+    audio.addEventListener('ended', () => { if (repeatMode === 2) { audio.currentTime = 0; audio.play(); } else { playNext(); } });
+    audio.addEventListener('play', () => { $('bpPlayBtn').innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'; $('fpPlayBtn').innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'; });
+    audio.addEventListener('pause', () => { $('bpPlayBtn').innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; $('fpPlayBtn').innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; });
+
+    window.openFullPlayer = function() { $('fullPlayer').classList.add('show'); };
+    window.closeFullPlayer = function() { $('fullPlayer').classList.remove('show'); };
+
+    // 3. Загрузка профиля
+    async function loadArtistProfile() {
+      $('artistNameDisplay').textContent = artistName;
+      $('artistAvatar').textContent = artistName.charAt(0).toUpperCase();
+      document.title = artistName + ' — SN music';
+
+      try {
+        const { data: profile } = await supabaseClient.from('artist_profiles').select('bio').eq('name', artistName).single();
+        if (profile && profile.bio) $('artistBio').textContent = profile.bio;
+
+        const { data: tracks, error } = await supabaseClient
+          .from('tracks')
+          .select('*')
+          .eq('artist', artistName)
+          .eq('status', 'approved')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        currentTracks = tracks || [];
+
+        const totalPlays = currentTracks.reduce((sum, t) => sum + (t.plays || 0), 0);
+        $('statTracks').textContent = currentTracks.length;
+        $('statPlays').textContent = totalPlays;
+
+        renderArtistTracks();
+      } catch (err) {
+        $('artistTracksList').innerHTML = '<div style="text-align: center; color: var(--danger);">Ошибка загрузки</div>';
+      }
+    }
+
+    function renderArtistTracks() {
+      if (!currentTracks.length) {
+        $('artistTracksList').innerHTML = '<div style="text-align: center; color: var(--muted);">У этого артиста пока нет треков.</div>';
+        return;
+      }
+
+      $('artistTracksList').innerHTML = currentTracks.map(t => {
+        const coverSrc = t.cover_url ? t.cover_url : 'logo.jpg';
+        return `
+        <div class="track ${t.vip ? 'vip' : ''}" data-id="${t.id}">
+          <img src="${coverSrc}" class="track-cover">
+          <div class="track-info">
+            <div class="track-title">${t.title}</div>
+            <div class="track-meta">
+              <span class="tag">${t.genre}</span>
+              <span class="tag plays">▶ ${t.plays || 0}</span>
+            </div>
+          </div>
+          <button class="play-btn" onclick='playTrack("${t.id}")'><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+        </div>`;
+      }).join('');
+    }
+
+    // Восстановление плеера
+    try {
+      const savedTrack = JSON.parse(localStorage.getItem('sn_current_track'));
+      if (savedTrack) {
+        setupTrack(savedTrack); 
+        if (localStorage.getItem('sn_is_playing') === 'true') { audio.play().catch(() => {}); }
+      }
+    } catch(e) {}
+
+    loadArtistProfile();
+  </script>
+</body>
+</html>
