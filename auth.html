@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Профиль — SN music</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #09090b; --surface: #18181b; --text: #f4f4f5; --muted: #a1a1aa; --accent: #8b5cf6; --danger: #ef4444; --vip: #fbbf24; --radius: 16px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    
+    body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; padding-bottom: 100px; }
+    
+    .card { background: var(--surface); border-radius: var(--radius); padding: 32px 24px; width: 100%; max-width: 450px; position: relative; overflow: hidden; }
+    .logo { text-align: center; margin-bottom: 20px; }
+    .logo img { height: 50px; border-radius: 10px; }
+    h2 { text-align: center; margin-bottom: 20px; font-size: 20px; }
+    
+    input[type="text"], input[type="email"], input[type="password"] { width: 100%; background: var(--bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px; color: var(--text); font-size: 15px; margin-bottom: 12px; outline: none; }
+    input:focus { border-color: var(--accent); }
+    
+    .file-btn { position: relative; display: block; width: 100%; background: var(--bg); border: 1px dashed rgba(255,255,255,0.2); border-radius: 12px; padding: 14px; text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 12px; cursor: pointer; overflow: hidden; }
+    .file-btn input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    .file-btn span { pointer-events: none; }
+    .file-btn.has-file { border-color: var(--accent); color: var(--accent); border-style: solid; }
+
+    .btn { width: 100%; background: var(--accent); color: white; border: none; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+    .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+    .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); margin-top: 20px; }
+    .switch { text-align: center; margin-top: 20px; font-size: 14px; color: var(--muted); }
+    .switch a { color: var(--accent); cursor: pointer; font-weight: 600; }
+    .error { color: var(--danger); font-size: 13px; text-align: center; margin-bottom: 12px; display: none; }
+    
+    .banner { height: 120px; background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(9,9,11,1)); background-size: cover; border-radius: 12px 12px 0 0; margin: -32px -24px 0 -24px; }
+    .avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--accent); border: 4px solid var(--surface); margin: -40px auto 10px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; background-size: cover; position: relative; z-index: 2; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 16px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+    .tab { background: none; border: none; color: var(--muted); font-weight: 600; cursor: pointer; padding: 5px; }
+    .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+    
+    .playlist-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+    .playlist-item:hover { border-color: var(--accent); }
+    .playlist-badge { font-size: 10px; background: var(--accent); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+    
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: var(--surface); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 450px; max-height: 80vh; overflow-y: auto; }
+    .modal h3 { margin-bottom: 16px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-close { background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; }
+    .modal-track { display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid #333; cursor: pointer; transition: 0.2s; }
+    .modal-track:hover { background: rgba(255,255,255,0.05); }
+    .modal-track img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
+    
+    .bottom-player { position: fixed; bottom: 70px; left: 12px; right: 12px; background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 10px 14px; display: none; align-items: center; gap: 12px; z-index: 1000; cursor: pointer; }
+    .bottom-player.active { display: flex; }
+    .bp-cover { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; }
+    .bp-info { flex: 1; min-width: 0; }
+    .bp-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bp-artist { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bp-controls { display: flex; align-items: center; gap: 10px; }
+    .bp-btn.play-pause { background: #fff; color: #000; width: 44px; height: 44px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; }
+    .bp-btn.play-pause svg { width: 24px; height: 24px; fill: currentColor; }
+    
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: rgba(15, 19, 27, 0.95); border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-around; align-items: center; z-index: 1001; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); text-decoration: none; font-size: 10px; cursor: pointer; flex: 1; }
+    .nav-item.active, .nav-item:hover { color: var(--accent); }
+    .nav-item svg { width: 22px; height: 22px; fill: currentColor; }
+
+    .full-player { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; padding: 24px; transform: translateY(100%); transition: transform 0.4s; height: 100dvh; }
+    .full-player.show { transform: translateY(0); }
+    .fp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .fp-close { background: rgba(255,255,255,0.08); border: none; width: 36px; height: 36px; border-radius: 50%; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .fp-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; max-width: 500px; margin: 0 auto; }
+    .fp-cover { width: 100%; max-width: 320px; aspect-ratio: 1/1; border-radius: 20px; object-fit: cover; margin-bottom: 24px; }
+    .fp-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .fp-artist { font-size: 16px; color: var(--muted); margin-bottom: 20px; text-decoration: none; display: block; }
+    .fp-artist:hover { color: var(--accent); }
+    .custom-progress-container { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .custom-progress { width: 100%; -webkit-appearance: none; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.15); outline: none; }
+    .custom-progress::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; cursor: pointer; }
+    .time-display { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+    .fp-buttons { display: flex; align-items: center; justify-content: center; gap: 24px; }
+    .fp-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; }
+    .fp-btn svg { width: 28px; height: 28px; fill: currentColor; }
+    .fp-btn.play-pause { width: 64px; height: 64px; background: #fff; color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .fp-btn.play-pause svg { width: 32px; height: 32px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo"><img src="logo.jpg"></div>
+
+    <div id="authView">
+      <h2 id="formTitle">Вход</h2>
+      <div class="error" id="err"></div>
+      <form id="authForm">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="pass" placeholder="Пароль" required>
+        <button type="submit" class="btn" id="btnSub">Войти</button>
+      </form>
+      <div class="switch" id="swText">Нет аккаунта? <a onclick="toggleLogin()">Регистрация</a></div>
+    </div>
+
+    <div id="profView" style="display:none;">
+      <div class="banner" id="banner"></div>
+      <div class="avatar" id="avatarBig">U</div>
+      <div style="text-align:center; margin-bottom:20px;">
+        <div style="font-size:20px; font-weight:bold;" id="dispName">Имя</div>
+        <div style="font-size:13px; color:var(--muted);" id="role">Слушатель</div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" id="tabBtnEdit" onclick="switchTab('edit')">Профиль</button>
+        <button class="tab" id="tabBtnPl" onclick="switchTab('pl')">Плейлисты</button>
+      </div>
+
+      <div id="tab-edit" style="display:block;">
+        <input type="text" id="editName" placeholder="Ваше артистическое имя">
+        
+        <label class="file-btn" id="lblAvatar">
+          <input type="file" accept="image/*" onchange="updLbl(this, 'lblAvatar')">
+          <span>Выбрать аватарку</span>
+        </label>
+        
+        <label class="file-btn" id="lblBanner">
+          <input type="file" accept="image/*" onchange="updLbl(this, 'lblBanner')">
+          <span>Выбрать фон профиля</span>
+        </label>
+
+        <button class="btn btn-outline" onclick="saveProf()" id="saveBtn">Сохранить</button>
+        <a href="#" id="artistLink" class="btn" style="display:block;text-align:center;text-decoration:none;margin-top:10px;">Моя страница артиста</a>
+        <button class="btn btn-danger" onclick="logout()">Выйти</button>
+        <div id="adminTools" style="display:none; margin-top:20px; border-top:1px solid #333; padding-top:15px;">
+          <button class="btn btn-outline" onclick="createChart()">+ Создать Чарт (Админ)</button>
+        </div>
+      </div>
+
+      <div id="tab-pl" style="display:none;">
+        <div id="playlists"></div>
+      </div>
+    </div>
+    
+    <div style="text-align:center; margin-top:20px;"><a href="index.html" style="color:var(--muted); text-decoration:none;">← На главную</a></div>
+  </div>
+
+  <div class="modal-overlay" id="playlistModal">
+    <div class="modal">
+      <h3 id="modalTitle">Название <button class="modal-close" onclick="closeModal()">×</button></h3>
+      <div id="modalTracks"></div>
+    </div>
+  </div>
+
+  <div class="bottom-player" id="bottomPlayer" onclick="openFullPlayer()">
+    <img src="logo.jpg" class="bp-cover" id="bpCover">
+    <div class="bp-info">
+      <div class="bp-title" id="bpTitle">Название</div>
+      <div class="bp-artist" id="bpArtist">Артист</div>
+    </div>
+    <div class="bp-controls">
+      <button class="bp-btn play-pause" id="bpPlayBtn" onclick="event.stopPropagation(); togglePlay()"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Главная</span></a>
+    <a href="index.html" class="nav-item" onclick="localStorage.setItem('focus_search','1')"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><span>Поиск</span></a>
+    <a href="upload.html" class="nav-item"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg><span>Загрузить</span></a>
+    <a href="index.html" class="nav-item" onclick="localStorage.setItem('open_analytics','1')"><svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg><span>Аналитика</span></a>
+    <a href="auth.html" class="nav-item active"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Профиль</span></a>
+  </nav>
+
+  <div class="full-player" id="fullPlayer">
+    <div class="fp-header">
+      <button class="fp-close" onclick="closeFullPlayer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+      <div style="font-size: 12px; font-weight: 700; color: var(--muted);">СЕЙЧАС ИГРАЕТ</div>
+      <div style="width: 36px;"></div>
+    </div>
+    <div class="fp-content">
+      <img src="logo.jpg" class="fp-cover" id="fpCover">
+      <div class="fp-title" id="fpTitle">Название</div>
+      <a href="#" class="fp-artist" id="fpArtistLink">Артист</a>
+    </div>
+    <div style="width:100%;">
+      <div class="custom-progress-container">
+        <input type="range" class="custom-progress" id="progressBar" value="0" min="0" max="100" step="0.1">
+        <div class="time-display"><span id="currentTime">0:00</span><span id="totalTime">0:00</span></div>
+      </div>
+      <audio id="mainAudio"></audio>
+      <div class="fp-buttons">
+        <button class="fp-btn" onclick="playPrev()"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+        <button class="fp-btn play-pause" id="fpPlayBtn" onclick="togglePlay()"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+        <button class="fp-btn" onclick="playNext()"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    
+    const firebaseConfig = { apiKey: "AIzaSyCWlkDjzylbhDMl1bN33fn-sQx3BFTIfMc", authDomain: "sn-music-d3c6c.firebaseapp.com", projectId: "sn-music-d3c6c", storageBucket: "sn-music-d3c6c.firebasestorage.app", messagingSenderId: "308834788211", appId: "1:308834788211:web:367f727c45a812b8835b06" };
+    const auth = getAuth(initializeApp(firebaseConfig));
+    const db = supabase.createClient('https://fgljnqcxjbpunlfwoktb.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnbGpucWN4amJwdW5sZndva3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODUzMzgsImV4cCI6MjEwODI2MTMzOH0.LPeIh77qTlhg8NmP5a6hZOVEDSgQeB57V6l8SMhXoeo');
+    
+    let user = null;
+    let currentProfile = null;
+    
+    // --- ГЛОБАЛЬНЫЙ ПЛЕЕР ---
+    let currentPlayingTrack = null;
+    const audio = document.getElementById('mainAudio');
+    
+    function savePlayerState() {
+      if (currentPlayingTrack && audio) {
+        localStorage.setItem('sn_player_state', JSON.stringify({
+          track: currentPlayingTrack, time: audio.currentTime, isPlaying: !audio.paused
+        }));
+      }
+    }
+    setInterval(savePlayerState, 1000);
+    window.addEventListener('beforeunload', savePlayerState);
+
+    function setupTrackUI(track) {
+      currentPlayingTrack = track;
+      document.getElementById('bpTitle').textContent = track.title; 
+      document.getElementById('bpArtist').textContent = track.artist; 
+      document.getElementById('bpCover').src = track.cover_url || 'logo.jpg';
+      document.getElementById('fpTitle').textContent = track.title; 
+      document.getElementById('fpArtistLink').textContent = track.artist; 
+      document.getElementById('fpArtistLink').href = `artist.html?name=${encodeURIComponent(track.artist)}`;
+      document.getElementById('fpCover').src = track.cover_url || 'logo.jpg';
+      document.getElementById('bottomPlayer').classList.add('active');
+    }
+
+    function playTrackGlobal(track) {
+      setupTrackUI(track);
+      audio.src = track.audio_url;
+      audio.play().catch(()=>{});
+      localStorage.setItem('sn_player_state', JSON.stringify({ track: track, time: 0, isPlaying: true }));
+    }
+
+    function loadPlayerState() {
+      const saved = localStorage.getItem('sn_player_state');
+      if (saved) {
+        try {
+          const state = JSON.parse(saved);
+          if (state.track) {
+            setupTrackUI(state.track);
+            audio.src = state.track.audio_url;
+            audio.addEventListener('loadedmetadata', () => {
+              audio.currentTime = state.time;
+              if (state.isPlaying) audio.play().catch(()=>{});
+            }, { once: true });
+          }
+        } catch(e) {}
+      }
+    }
+    loadPlayerState();
+
+    function formatTime(s) { if (isNaN(s) || s === Infinity) return "0:00"; const m = Math.floor(s/60), sec = Math.floor(s%60); return `${m}:${sec < 10 ? '0' : ''}${sec}`; }
+    audio.addEventListener('timeupdate', () => { if (!audio.duration) return; const p = (audio.currentTime/audio.duration)*100; document.getElementById('progressBar').value = audio.currentTime; document.getElementById('currentTime').textContent = formatTime(audio.currentTime); document.getElementById('progressBar').style.background = `linear-gradient(to right, #fff ${p}%, rgba(255,255,255,0.15) ${p}%)`; });
+    audio.addEventListener('loadedmetadata', () => { document.getElementById('progressBar').max = audio.duration; document.getElementById('totalTime').textContent = formatTime(audio.duration); });
+    document.getElementById('progressBar').addEventListener('input', (e) => { audio.currentTime = parseFloat(e.target.value); });
+
+    window.togglePlay = () => { if (audio.paused) { audio.play(); } else { audio.pause(); } };
+    window.openFullPlayer = () => { document.getElementById('fullPlayer').classList.add('show'); };
+    window.closeFullPlayer = () => { document.getElementById('fullPlayer').classList.remove('show'); };
+    audio.addEventListener('play', () => { document.getElementById('bpPlayBtn').innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'; document.getElementById('fpPlayBtn').innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'; });
+    audio.addEventListener('pause', () => { document.getElementById('bpPlayBtn').innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; document.getElementById('fpPlayBtn').innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; });
+
+    window.logout = async () => { await signOut(auth); location.reload(); };
+    window.updLbl = function(input, lblId) {
+      if (input.files.length > 0) {
+        document.getElementById(lblId).classList.add('has-file');
+        document.getElementById(lblId).querySelector('span').textContent = input.files[0].name;
+      }
+    };
+
+    onAuthStateChanged(auth, async (u) => {
+      user = u;
+      if (u) {
+        document.getElementById('authView').style.display = 'none';
+        document.getElementById('profView').style.display = 'block';
+        
+        const { data: prof } = await db.from('artist_profiles').select('*').eq('user_id', u.uid).single();
+        currentProfile = prof;
+
+        const defaultName = u.email.split('@')[0];
+        const displayName = prof ? prof.name : defaultName;
+
+        document.getElementById('dispName').textContent = displayName;
+        document.getElementById('editName').value = displayName;
+        
+        if (u.email === 'nur41games@gmail.com') {
+          document.getElementById('role').textContent = 'Админ';
+          document.getElementById('role').style.color = 'var(--accent)';
+          document.getElementById('adminTools').style.display = 'block';
+        } else {
+          document.getElementById('role').textContent = 'Слушатель / Артист';
+        }
+        
+        if (prof) {
+          if (prof.banner_url) document.getElementById('banner').style.backgroundImage = `url(${prof.banner_url})`;
+          if (prof.avatar_url) { 
+            const av = document.getElementById('avatarBig'); 
+            av.style.backgroundImage = `url(${prof.avatar_url})`; 
+            av.textContent = ''; 
+          }
+        }
+        
+        document.getElementById('artistLink').href = `artist.html?name=${encodeURIComponent(displayName)}`;
+        loadPlaylists();
+      } else {
+        document.getElementById('authView').style.display = 'block';
+        document.getElementById('profView').style.display = 'none';
+      }
+    });
+
+    window.switchTab = function(tab) {
+      document.getElementById('tab-edit').style.display = tab === 'edit' ? 'block' : 'none';
+      document.getElementById('tab-pl').style.display = tab === 'pl' ? 'block' : 'none';
+      document.getElementById('tabBtnEdit').classList.toggle('active', tab === 'edit');
+      document.getElementById('tabBtnPl').classList.toggle('active', tab === 'pl');
+    };
+
+    window.saveProf = async () => {
+      const btn = document.getElementById('saveBtn');
+      btn.textContent = 'Сохранение...'; btn.disabled = true;
+
+      const newName = document.getElementById('editName').value.trim();
+      const avatarFile = document.querySelector('#lblAvatar input').files[0];
+      const bannerFile = document.querySelector('#lblBanner input').files[0];
+      
+      const oldName = currentProfile ? currentProfile.name : user.email.split('@')[0];
+      let avatarUrl = currentProfile ? currentProfile.avatar_url : null;
+      let bannerUrl = currentProfile ? currentProfile.banner_url : null;
+
+      try {
+        if (avatarFile) {
+          const fName = `av_${user.uid}_${Date.now()}`;
+          await db.storage.from('audio').upload(fName, avatarFile);
+          avatarUrl = db.storage.from('audio').getPublicUrl(fName).data.publicUrl;
+        }
+        if (bannerFile) {
+          const fName = `bn_${user.uid}_${Date.now()}`;
+          await db.storage.from('audio').upload(fName, bannerFile);
+          bannerUrl = db.storage.from('audio').getPublicUrl(fName).data.publicUrl;
+        }
+
+        if (currentProfile) {
+          await db.from('artist_profiles').update({ name: newName, avatar_url: avatarUrl, banner_url: bannerUrl }).eq('user_id', user.uid);
+        } else {
+          await db.from('artist_profiles').insert({ user_id: user.uid, name: newName, avatar_url: avatarUrl, banner_url: bannerUrl });
+        }
+
+        if (newName !== oldName) {
+          await db.from('tracks').update({ artist: newName }).eq('artist', oldName);
+        }
+
+        alert('Профиль успешно обновлен!');
+        location.reload();
+      } catch (e) {
+        alert('Ошибка загрузки: ' + e.message);
+        btn.textContent = 'Сохранить'; btn.disabled = false;
+      }
+    };
+
+    async function loadPlaylists() {
+      const list = document.getElementById('playlists');
+      const { data: likes } = await db.from('likes').select('*').eq('user_id', user.uid);
+      
+      let html = `<div class="playlist-item" onclick="openPlaylist('favorites', 'Избранное ♥')">
+        <b>Избранное ♥</b> <span style="float:right">${likes?.length || 0}</span>
+      </div>`;
+      
+      const { data: pls } = await db.from('playlists').select('*').eq('user_id', user.uid);
+      if (pls) pls.forEach(p => {
+        html += `<div class="playlist-item" onclick="openPlaylist('${p.id}', '${p.name}')">
+          <div><b>${p.name}</b> ${p.is_chart ? '<span class="playlist-badge">ЧАРТ</span>' : ''}</div>
+          ${user.email === 'nur41games@gmail.com' ? `<button onclick="event.stopPropagation(); delPl('${p.id}')" style="background:none;border:none;color:red;cursor:pointer;">X</button>` : ''}
+        </div>`;
+      });
+      list.innerHTML = html;
+    }
+
+    window.openPlaylist = async (id, name) => {
+      document.getElementById('modalTitle').innerHTML = `${name} <button class="modal-close" onclick="closeModal()">×</button>`;
+      document.getElementById('modalTracks').innerHTML = '<p style="color:var(--muted);">Загрузка...</p>';
+      document.getElementById('playlistModal').classList.add('show');
+
+      let trackIds = [];
+      if (id === 'favorites') {
+        const { data: likes } = await db.from('likes').select('track_id').eq('user_id', user.uid);
+        trackIds = likes ? likes.map(l => l.track_id) : [];
+      } else {
+        const { data: pt } = await db.from('playlist_tracks').select('track_id').eq('playlist_id', id);
+        trackIds = pt ? pt.map(p => p.track_id) : [];
+      }
+
+      if (!trackIds.length) return document.getElementById('modalTracks').innerHTML = '<p style="color:var(--muted);">Тут пока пусто.</p>';
+
+      const { data: tracks } = await db.from('tracks').select('*').in('id', trackIds);
+      
+      document.getElementById('modalTracks').innerHTML = tracks.map(t => `
+        <div class="modal-track" onclick='playFromModal(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+          <img src="${t.cover_url || 'logo.jpg'}">
+          <div style="flex:1"><b>${t.title}</b><br><span style="font-size:12px;color:var(--muted);">${t.artist}</span></div>
+          <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:var(--accent);"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+      `).join('');
+    };
+
+    window.playFromModal = (track) => {
+      playTrackGlobal(track);
+      closeModal();
+    };
+
+    window.closeModal = () => document.getElementById('playlistModal').classList.remove('show');
+    window.delPl = async (id) => { if(confirm('Удалить плейлист?')) { await db.from('playlists').delete().eq('id', id); loadPlaylists(); } };
+    window.createChart = async () => {
+      const n = prompt('Название Чарта:'); if (!n) return;
+      await db.from('playlists').insert({ user_id: user.uid, name: n, is_chart: true }); loadPlaylists();
+    };
+
+    window.toggleLogin = () => {
+      const isLogin = document.getElementById('formTitle').innerText === 'Вход';
+      document.getElementById('formTitle').innerText = isLogin ? 'Регистрация' : 'Вход';
+      document.getElementById('btnSub').innerText = isLogin ? 'Создать аккаунт' : 'Войти';
+      document.getElementById('swText').innerHTML = isLogin ? 'Есть аккаунт? <a onclick="toggleLogin()">Войти</a>' : 'Нет аккаунта? <a onclick="toggleLogin()">Регистрация</a>';
+    };
+
+    document.getElementById('authForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const em = document.getElementById('email').value, ps = document.getElementById('pass').value;
+      const isLogin = document.getElementById('formTitle').innerText === 'Вход';
+      try {
+        if (isLogin) await signInWithEmailAndPassword(auth, em, ps);
+        else await createUserWithEmailAndPassword(auth, em, ps);
+      } catch (err) { document.getElementById('err').innerText = err.message; document.getElementById('err').style.display = 'block'; }
+    };
+  </script>
+</body>
+</html>
